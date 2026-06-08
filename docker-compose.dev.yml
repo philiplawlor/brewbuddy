@@ -1,0 +1,60 @@
+# BrewBuddy - Development Docker Compose
+# Use: docker compose -f docker-compose.dev.yml up -d
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: brewbuddy-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    depends_on:
+      - backend
+    networks:
+      - brewbuddy-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: brewbuddy-backend-dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend/src:/app/src
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/brewbuddy
+      - NODE_ENV=development
+      - JWT_SECRET=dev-secret-change-in-production
+      - JWT_EXPIRES_IN=7d
+    depends_on:
+      - mongodb
+    networks:
+      - brewbuddy-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:8.0
+    container_name: brewbuddy-mongodb-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data_dev:/data/db
+    networks:
+      - brewbuddy-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data_dev:
+    driver: local
+
+networks:
+  brewbuddy-network:
+    driver: bridge
