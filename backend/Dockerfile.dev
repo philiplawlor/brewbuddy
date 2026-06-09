@@ -4,11 +4,14 @@
 FROM node:20-alpine
 WORKDIR /app
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Copy package files
 COPY package*.json ./
 
 # Install all dependencies (including dev)
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -19,5 +22,5 @@ EXPOSE 3001
 # Set environment
 ENV NODE_ENV=development
 
-# Start with nodemon for hot reload
+# Start with tsx watch for hot reload
 CMD ["npm", "run", "dev"]
