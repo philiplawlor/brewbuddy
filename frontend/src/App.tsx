@@ -4,6 +4,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
+import { RecipeList } from './pages/RecipeList';
+import { RecipeDetail } from './pages/RecipeDetail';
 
 function Home() {
   const { user } = useAuth();
@@ -76,6 +78,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes"
+        element={
+          <ProtectedRoute>
+            <RecipeList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/recipes/:id"
+        element={
+          <ProtectedRoute>
+            <RecipeDetail />
           </ProtectedRoute>
         }
       />
