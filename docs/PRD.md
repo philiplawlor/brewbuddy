@@ -52,6 +52,9 @@ BrewBuddy is a modern brewing assistant that combines recipe design, brew sessio
 | Fermentation Profile | Multi-stage fermentation temperature planning |
 | Recipe Notes | Free-text notes for recipe documentation |
 | Recipe Folders | Organize recipes into folders/categories |
+| Recipe Cloning | Duplicate recipes to create variants |
+| Recipe Side-by-Side | Compare two recipes in split view |
+| Equipment Profile Selection | Link equipment profile for accurate calculations |
 
 **BeerXML Fields (Import/Export):**
 
@@ -207,6 +210,8 @@ BrewBuddy is a modern brewing assistant that combines recipe design, brew sessio
 | Event Logging | Timestamped log of all brew day events |
 | Manual Confirmations | Pause timer until user confirms step complete |
 | Quick Glance | Large text visible at arm's length |
+| Printable Brew Sheets | PDF export for clipboard use |
+| Brew Day Calendar | Schedule and plan upcoming brew sessions |
 
 **Brew Day Event Types:**
 
@@ -236,6 +241,7 @@ BrewBuddy is a modern brewing assistant that combines recipe design, brew sessio
 | Interactive Charts | Visual fermentation curves |
 | Device Integration | Tilt, iSpindel, Plaato auto-logging |
 | Temperature Alerts | Out-of-range temperature warnings |
+| Batch Comparison | Overlay fermentation curves from multiple batches |
 
 #### 2.1.4 Water Chemistry
 
