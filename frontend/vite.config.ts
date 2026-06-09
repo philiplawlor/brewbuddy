@@ -18,7 +18,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     css: true,
     reporters: ['verbose'],
-    threads: false,
+    pool: 'forks',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
