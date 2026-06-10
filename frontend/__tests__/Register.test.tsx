@@ -134,7 +134,8 @@ describe('Register Page', () => {
       </MemoryRouter>
     );
 
-    const container = screen.getByText('Create Account').closest('div');
+    const heading = screen.getByRole('heading', { name: /create account/i });
+    const container = heading.closest('div');
     expect(container?.className).toContain('max-w-md');
   });
 });

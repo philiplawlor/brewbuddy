@@ -46,4 +46,22 @@ export const authAPI = {
   getMe: () => api.get('/auth/me'),
 };
 
+// Recipe API
+export const recipeAPI = {
+  getRecipes: (params?: { page?: number; limit?: number; sort?: string }) =>
+    api.get('/recipes', { params }),
+  
+  getRecipeById: (id: string) =>
+    api.get(`/recipes/${id}`),
+  
+  createRecipe: (data: Partial<import('../types').Recipe>) =>
+    api.post('/recipes', data),
+  
+  updateRecipe: (id: string, data: Partial<import('../types').Recipe>) =>
+    api.put(`/recipes/${id}`, data),
+  
+  deleteRecipe: (id: string) =>
+    api.delete(`/recipes/${id}`),
+};
+
 export default api;

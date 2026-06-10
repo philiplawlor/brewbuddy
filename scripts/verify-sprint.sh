@@ -100,6 +100,16 @@ if ! curl -f http://localhost:5173 > /dev/null 2>&1; then
     exit 1
 fi
 
+# Run backend tests
+echo ""
+echo "🧪 Running backend tests..."
+(cd backend && npm test 2>&1 | tail -20) || { echo "❌ Backend tests failed"; exit 1; }
+
+# Run frontend tests
+echo ""
+echo "🧪 Running frontend tests..."
+(cd frontend && npm run test:run 2>&1 | tail -20) || { echo "❌ Frontend tests failed"; exit 1; }
+
 # Verify all containers are healthy
 echo ""
 echo "🏥 Checking container health status..."
