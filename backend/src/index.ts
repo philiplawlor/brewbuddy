@@ -5,6 +5,7 @@ import connectDB from './config/database';
 import { healthRouter } from './routes/health';
 import { authRouter } from './routes/auth';
 import { recipeRouter } from './routes/recipes';
+import { brewSessionRouter } from './routes/brew-sessions';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', healthRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/recipes', recipeRouter);
+app.use('/api/brew-sessions', brewSessionRouter);
 
 // Error handling
 app.use(errorHandler);
