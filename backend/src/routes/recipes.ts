@@ -102,19 +102,34 @@ const updateRecipeValidation = [
 recipeRouter.get('/', auth, async (req: Request, res: Response) => {
   try {
     const userId = req.user!._id;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
-    const sort = (req.query.sort as string) || '-createdAt';
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 20));
+    const sortField = (req.query.sort as string) || 'createdAt';
+    const sortOrder = (req.query.order as string) === 'asc' ? 1 : -1;
+    const search = (req.query.search as string) || '';
+    const style = (req.query.style as string) || '';
 
     const skip = (page - 1) * limit;
 
-    const recipes = await Recipe.find({ userId, isArchived: false })
-      .sort(sort)
+    const filter: Record<string, any> = { userId, isArchived: false };
+
+    if (style) {
+      filter.style = style;
+    }
+
+    if (search) {
+      filter.recipeName = { $regex: search, $options: 'i' };
+    }
+
+    const sortOptions: Record<string, 1 | -1> = { [sortField]: sortOrder };
+
+    const recipes = await Recipe.find(filter)
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const total = await Recipe.countDocuments({ userId, isArchived: false });
+    const total = await Recipe.countDocuments(filter);
     const pages = Math.ceil(total / limit);
 
     res.status(200).json({

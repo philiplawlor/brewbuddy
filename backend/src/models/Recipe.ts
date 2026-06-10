@@ -147,6 +147,7 @@ recipeSchema.index({ userId: 1 });
 recipeSchema.index({ style: 1 });
 recipeSchema.index({ isPublic: 1 });
 recipeSchema.index({ createdAt: -1 });
+recipeSchema.index({ recipeName: 'text' });
 
 const Recipe = mongoose.model<RecipeDocument>('Recipe', recipeSchema);
 
