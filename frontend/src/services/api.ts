@@ -64,4 +64,49 @@ export const recipeAPI = {
     api.delete(`/recipes/${id}`),
 };
 
+// Brew Session API
+export const brewSessionAPI = {
+  getSessions: (params?: { status?: string; page?: number; limit?: number }) =>
+    api.get('/brew-sessions', { params }),
+
+  getSessionById: (id: string) =>
+    api.get(`/brew-sessions/${id}`),
+
+  createSession: (data: {
+    recipeId: string;
+    sessionName?: string;
+    brewDate?: string;
+    batchNumber?: string;
+    method?: string;
+    batchSize?: number;
+    batchSizeUnit?: string;
+    notes?: string;
+  }) => api.post('/brew-sessions', data),
+
+  updateSession: (id: string, data: Record<string, any>) =>
+    api.put(`/brew-sessions/${id}`, data),
+
+  deleteSession: (id: string) =>
+    api.delete(`/brew-sessions/${id}`),
+
+  logEvent: (sessionId: string, data: {
+    eventType: string;
+    temperature?: number;
+    gravityReading?: number;
+    notes?: string;
+    durationMinutes?: number;
+    hopName?: string;
+    hopWeight?: number;
+    hopWeightUnit?: string;
+    hopAlphaAcid?: number;
+    hopBoilMinutes?: number;
+    mashStepName?: string;
+    targetTemp?: number;
+    actualTemp?: number;
+  }) => api.post(`/brew-sessions/${sessionId}/events`, data),
+
+  getEvents: (sessionId: string) =>
+    api.get(`/brew-sessions/${sessionId}/events`),
+};
+
 export default api;

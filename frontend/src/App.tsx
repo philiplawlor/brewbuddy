@@ -6,6 +6,8 @@ import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { RecipeList } from './pages/RecipeList';
 import { RecipeDetail } from './pages/RecipeDetail';
+import { BrewSessionList } from './pages/BrewSessionList';
+import { BrewSessionDetail } from './pages/BrewSessionDetail';
 
 function Home() {
   const { user } = useAuth();
@@ -94,6 +96,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RecipeDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/brew-sessions"
+        element={
+          <ProtectedRoute>
+            <BrewSessionList />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/brew-sessions/:id"
+        element={
+          <ProtectedRoute>
+            <BrewSessionDetail />
           </ProtectedRoute>
         }
       />
