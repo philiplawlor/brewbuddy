@@ -85,7 +85,7 @@ export function Register() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormField
             label="Username"
             type="text"
