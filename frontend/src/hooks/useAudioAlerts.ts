@@ -36,7 +36,7 @@ export function useAudioAlerts() {
     });
   }, []);
 
-  const playAlert = useCallback((type: 'step' | 'hop' | 'complete') => {
+  const playAlert = useCallback((type: 'step' | 'hop' | 'complete'): boolean => {
     if (settings.sound) {
       const audio = new Audio(`/sounds/${type}.mp3`);
       audio.play().catch(() => {});
@@ -45,6 +45,8 @@ export function useAudioAlerts() {
     if (settings.vibration && navigator.vibrate) {
       navigator.vibrate(type === 'complete' ? [200, 100, 200] : 200);
     }
+
+    return settings.visual;
   }, [settings]);
 
   return {
