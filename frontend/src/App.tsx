@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AppLayout } from './components/Layout/AppLayout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { RecipeList } from './pages/RecipeList';
 import { RecipeDetail } from './pages/RecipeDetail';
+import { RecipeForm } from './pages/RecipeForm';
 import { BrewSessionList } from './pages/BrewSessionList';
 import { BrewSessionDetail } from './pages/BrewSessionDetail';
 import { BrewTimer } from './pages/BrewTimer';
@@ -76,54 +78,16 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recipes"
-        element={
-          <ProtectedRoute>
-            <RecipeList />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/recipes/:id"
-        element={
-          <ProtectedRoute>
-            <RecipeDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/brew-sessions"
-        element={
-          <ProtectedRoute>
-            <BrewSessionList />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/brew-sessions/:id"
-        element={
-          <ProtectedRoute>
-            <BrewSessionDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/brew-sessions/:id/timer"
-        element={
-          <ProtectedRoute>
-            <BrewTimer />
-          </ProtectedRoute>
-        }
-      />
+      <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/recipes" element={<RecipeList />} />
+        <Route path="/recipes/new" element={<RecipeForm />} />
+        <Route path="/recipes/:id" element={<RecipeDetail />} />
+        <Route path="/recipes/:id/edit" element={<RecipeForm />} />
+        <Route path="/brew-sessions" element={<BrewSessionList />} />
+        <Route path="/brew-sessions/:id" element={<BrewSessionDetail />} />
+        <Route path="/brew-sessions/:id/timer" element={<BrewTimer />} />
+      </Route>
     </Routes>
   );
 }
