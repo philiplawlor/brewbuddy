@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { TimerState, HopAddition } from '../types/timer';
+import { TimerState } from '../types/timer';
+import { BrewSession } from '../types';
 
 const STEP_DURATIONS = {
   MASH: 60 * 60, // 60 minutes
@@ -10,16 +11,16 @@ const STEP_DURATIONS = {
 
 const STEP_ORDER = ['MASH', 'BOIL', 'WHIRLPOOL', 'COOL'] as const;
 
-export function useBrewTimer(session: any) {
+export function useBrewTimer(session: BrewSession) {
   const [state, setState] = useState<TimerState>({
     currentStep: 'MASH',
     timeRemaining: STEP_DURATIONS.MASH,
     isRunning: false,
-    hopAdditions: session.hopAdditions || [],
+    hopAdditions: (session as any).hopAdditions || [],
     events: [],
   });
 
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const start = useCallback(() => {
     setState(prev => ({ ...prev, isRunning: true }));
@@ -45,10 +46,13 @@ export function useBrewTimer(session: any) {
   useEffect(() => {
     if (state.isRunning && state.timeRemaining > 0) {
       intervalRef.current = setInterval(() => {
-        setState(prev => ({
-          ...prev,
-          timeRemaining: Math.max(0, prev.timeRemaining - 1),
-        }));
+        setState(prev => {
+          const next = prev.timeRemaining - 1;
+          if (next <= 0) {
+            return { ...prev, timeRemaining: 0, isRunning: false };
+          }
+          return { ...prev, timeRemaining: next };
+        });
       }, 1000);
     }
 
@@ -57,7 +61,7 @@ export function useBrewTimer(session: any) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [state.isRunning, state.timeRemaining]);
+  }, [state.isRunning]);
 
   return {
     ...state,
