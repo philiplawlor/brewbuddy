@@ -44,7 +44,7 @@ export function useBrewTimer(session: BrewSession) {
   }, []);
 
   useEffect(() => {
-    if (state.isRunning && state.timeRemaining > 0) {
+    if (state.isRunning) {
       intervalRef.current = setInterval(() => {
         setState(prev => {
           const next = prev.timeRemaining - 1;
@@ -61,7 +61,7 @@ export function useBrewTimer(session: BrewSession) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [state.isRunning]);
+  }, [state.isRunning, state.timeRemaining]);
 
   return {
     ...state,
