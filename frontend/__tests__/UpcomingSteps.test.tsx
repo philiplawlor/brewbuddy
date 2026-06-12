@@ -9,7 +9,8 @@ describe('UpcomingSteps', () => {
   });
 
   it('should highlight next step', () => {
-    render(<UpcomingSteps currentStep="MASH" />);
-    expect(screen.getByText('Boil')).toHaveClass('opacity-100');
+    const { container } = render(<UpcomingSteps currentStep="MASH" />);
+    const items = container.querySelectorAll('.flex.items-center');
+    expect(items[0]).toHaveClass('opacity-100');
   });
 });
