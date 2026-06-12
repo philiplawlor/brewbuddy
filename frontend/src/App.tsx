@@ -8,6 +8,7 @@ import { RecipeList } from './pages/RecipeList';
 import { RecipeDetail } from './pages/RecipeDetail';
 import { BrewSessionList } from './pages/BrewSessionList';
 import { BrewSessionDetail } from './pages/BrewSessionDetail';
+import { BrewTimer } from './pages/BrewTimer';
 
 function Home() {
   const { user } = useAuth();
@@ -112,6 +113,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <BrewSessionDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/brew-sessions/:id/timer"
+        element={
+          <ProtectedRoute>
+            <BrewTimer />
           </ProtectedRoute>
         }
       />
