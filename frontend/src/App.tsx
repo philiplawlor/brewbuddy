@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppLayout } from './components/Layout/AppLayout';
@@ -11,50 +11,7 @@ import { RecipeForm } from './pages/RecipeForm';
 import { BrewSessionList } from './pages/BrewSessionList';
 import { BrewSessionDetail } from './pages/BrewSessionDetail';
 import { BrewTimer } from './pages/BrewTimer';
-
-function Home() {
-  const { user } = useAuth();
-  
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center">
-          <h1 className="text-6xl font-bold text-amber-800 mb-6">
-            BrewBuddy
-          </h1>
-          <p className="text-xl text-amber-700 mb-8">
-            Your modern brewing assistant
-          </p>
-          <div className="space-x-4">
-            {user ? (
-              <Link
-                to="/dashboard"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-              >
-                Go to Dashboard
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-white hover:bg-amber-50 text-amber-600 font-semibold py-3 px-6 rounded-lg border-2 border-amber-600 transition duration-200"
-                >
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { Landing } from './pages/Landing';
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -75,7 +32,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
