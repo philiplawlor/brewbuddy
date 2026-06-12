@@ -1,3 +1,5 @@
+import { formatTime } from '../../utils/formatTime';
+
 interface StepTimerProps {
   step: string;
   timeRemaining: number;
@@ -7,9 +9,7 @@ interface StepTimerProps {
 }
 
 export function StepTimer({ step, timeRemaining, isRunning, onStart, onPause }: StepTimerProps) {
-  const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-  const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const formattedTime = formatTime(timeRemaining);
 
   return (
     <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl p-6 text-center text-white">

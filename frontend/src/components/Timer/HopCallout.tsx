@@ -1,4 +1,4 @@
-import React from 'react';
+import { formatTime } from '../../utils/formatTime';
 
 interface HopCalloutProps {
   nextHop: { time: number; name: string; amount: number; unit: string } | null;
@@ -8,9 +8,7 @@ interface HopCalloutProps {
 export function HopCallout({ nextHop, timeUntilHop }: HopCalloutProps) {
   if (!nextHop) return null;
 
-  const minutes = Math.floor(timeUntilHop / 60);
-  const seconds = timeUntilHop % 60;
-  const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  const formattedTime = formatTime(timeUntilHop);
   const isDue = timeUntilHop === 0;
 
   return (
