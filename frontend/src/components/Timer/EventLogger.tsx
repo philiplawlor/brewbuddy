@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface EventLoggerProps {
   onLogEvent: (event: { eventType: string; value?: number; notes?: string }) => void;

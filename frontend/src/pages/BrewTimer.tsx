@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 import { StepTimer } from '../components/Timer/StepTimer';
 import { HopCallout } from '../components/Timer/HopCallout';

@@ -17,8 +17,6 @@ export function BrewStepProgress({ steps, currentStep }: BrewStepProgressProps) 
       {steps.map((step, index) => {
         const isComplete = index < currentStep;
         const isCurrent = index === currentStep;
-        const isUpcoming = index > currentStep;
-
         return (
           <div key={step} className="flex items-center flex-1 last:flex-none">
             {/* Step circle */}
