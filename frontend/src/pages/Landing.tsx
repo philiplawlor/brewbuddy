@@ -1,15 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 export function Landing() {
-  const heroRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-    hero.classList.add('animate-fade-in');
-  }, []);
-
   const features = [
     {
       icon: (
@@ -50,33 +41,33 @@ export function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-brewery-black text-white overflow-hidden">
-      {/* Hero Section */}
-      <div ref={heroRef} className="relative opacity-0">
+    <div className="min-h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+      {/* Hero Section - Visible immediately via CSS animation */}
+      <div className="relative animate-fade-in">
         {/* Animated background gradient orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-amber-800/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-amber-600/5 to-transparent rounded-full" />
+          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: 'rgba(217, 119, 6, 0.15)' }} />
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{ backgroundColor: 'rgba(180, 83, 9, 0.15)', animationDelay: '1s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(217, 119, 6, 0.08), transparent)' }} />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20">
           <div className="text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-600/30 bg-amber-600/10 mb-8">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-amber-400 text-sm font-medium tracking-wide uppercase">Open Source Brewing</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full tag-theme mb-8">
+              <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'var(--accent-primary)' }} />
+              <span className="text-sm font-medium tracking-wide uppercase" style={{ color: 'var(--tag-text)' }}>Open Source Brewing</span>
             </div>
 
             {/* Title */}
             <h1 className="font-display text-6xl md:text-8xl lg:text-9xl font-bold mb-6 tracking-tight">
-              <span className="text-white">Brew</span>
-              <span className="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 bg-clip-text text-transparent">Buddy</span>
+              <span style={{ color: 'var(--text-primary)' }}>Brew</span>
+              <span className="gradient-text">Buddy</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Your modern brewing assistant. Craft perfect beer with smart recipes, 
+            <p className="text-lg md:text-xl mb-12 max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              Your modern brewing assistant. Craft perfect beer with smart recipes,
               precise timers, and detailed session tracking.
             </p>
 
@@ -84,13 +75,27 @@ export function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/register"
-                className="group relative px-8 py-4 bg-amber-600 hover:bg-amber-500 text-white font-display font-semibold text-lg rounded-xl transition-all duration-300 hover:shadow-[0_0_40px_rgba(217,119,6,0.3)]"
+                className="group relative px-8 py-4 font-display font-semibold text-lg rounded-xl transition-all duration-300 text-white"
+                style={{ backgroundColor: 'var(--accent-primary)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-hover)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--accent-primary)')}
               >
                 <span className="relative z-10">Start Brewing</span>
               </Link>
               <Link
                 to="/login"
-                className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-display font-semibold text-lg rounded-xl border border-white/10 hover:border-white/20 transition-all duration-300"
+                className="px-8 py-4 font-display font-semibold text-lg rounded-xl transition-all duration-300"
+                style={{
+                  backgroundColor: 'var(--bg-card)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-default)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border-default)';
+                }}
               >
                 Sign In
               </Link>
@@ -104,9 +109,9 @@ export function Landing() {
         <div className="text-center mb-16">
           <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">
             Everything You Need to{' '}
-            <span className="bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">Brew Better</span>
+            <span className="gradient-text">Brew Better</span>
           </h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
+          <p className="text-lg max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>
             From recipe design to fermentation tracking, BrewBuddy has you covered.
           </p>
         </div>
@@ -115,17 +120,24 @@ export function Landing() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group relative bg-brewery-dark/80 backdrop-blur-sm border border-white/5 rounded-2xl p-8 hover:border-amber-600/30 transition-all duration-500 hover:shadow-[0_0_30px_rgba(217,119,6,0.1)]"
+              className="group relative card-theme rounded-2xl p-8 transition-all duration-500"
             >
               {/* Hover glow effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-[var(--accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
               <div className="relative z-10">
-                <div className="w-14 h-14 rounded-xl bg-amber-600/10 border border-amber-600/20 flex items-center justify-center text-amber-500 mb-5 group-hover:bg-amber-600/20 transition-colors duration-500">
+                <div
+                  className="w-14 h-14 rounded-xl flex items-center justify-center mb-5 transition-colors duration-500"
+                  style={{
+                    backgroundColor: 'var(--tag-bg)',
+                    border: '1px solid var(--tag-border)',
+                    color: 'var(--accent-primary)',
+                  }}
+                >
                   {feature.icon}
                 </div>
-                <h3 className="font-display text-xl font-semibold mb-3 text-white">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed">{feature.desc}</p>
+                <h3 className="font-display text-xl font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>{feature.title}</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>{feature.desc}</p>
               </div>
             </div>
           ))}
@@ -133,7 +145,7 @@ export function Landing() {
       </div>
 
       {/* Stats Section */}
-      <div className="border-y border-white/5">
+      <div style={{ borderTop: '1px solid var(--border-default)', borderBottom: '1px solid var(--border-default)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
@@ -143,8 +155,8 @@ export function Landing() {
               { value: '24/7', label: 'Brew Day Support' },
             ].map((stat, i) => (
               <div key={i}>
-                <div className="font-display text-3xl md:text-4xl font-bold text-amber-500 mb-2">{stat.value}</div>
-                <div className="text-gray-500 text-sm uppercase tracking-wider">{stat.label}</div>
+                <div className="font-display text-3xl md:text-4xl font-bold mb-2" style={{ color: 'var(--accent-primary)' }}>{stat.value}</div>
+                <div className="text-sm uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -152,16 +164,16 @@ export function Landing() {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-white/5">
+      <footer style={{ borderTop: '1px solid var(--border-default)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--accent-primary)' }}>
                 <span className="font-display font-bold text-white text-sm">B</span>
               </div>
-              <span className="font-display font-semibold text-white">BrewBuddy</span>
+              <span className="font-display font-semibold" style={{ color: 'var(--text-primary)' }}>BrewBuddy</span>
             </div>
-            <div className="flex items-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-6 text-sm" style={{ color: 'var(--text-muted)' }}>
               <span>Crafted with care for homebrewers</span>
               <span className="hidden sm:inline">·</span>
               <span className="hidden sm:inline">Open Source</span>
