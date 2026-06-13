@@ -21,6 +21,8 @@ interface FormErrors {
   recipeName?: string;
 }
 
+type StepKey = 'basic' | 'ingredients' | 'instructions';
+
 const defaultFormData: FormData = {
   recipeName: '',
   style: '',
@@ -32,11 +34,42 @@ const defaultFormData: FormData = {
   notes: '',
 };
 
+const steps: { key: StepKey; label: string; icon: JSX.Element }[] = [
+  {
+    key: 'basic',
+    label: 'Basic Info',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: 'ingredients',
+    label: 'Ingredients',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    ),
+  },
+  {
+    key: 'instructions',
+    label: 'Instructions',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+];
+
 export function RecipeForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
+  const [currentStep, setCurrentStep] = useState<StepKey>('basic');
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [grains, setGrains] = useState<GrainData[]>([]);
   const [hops, setHops] = useState<HopData[]>([]);
@@ -79,31 +112,31 @@ export function RecipeForm() {
     const avgPotential = grains.length > 0
       ? grains.reduce((sum, g) => sum + (g.potentialExtract || 1.037) * (g.weight || 0), 0) / totalGrainWeight
       : 1.037;
-    
+
     const grainPoints = (avgPotential - 1) * 1000;
     const efficiencyDecimal = formData.efficiency / 100;
     const ogPoints = grainPoints * efficiencyDecimal * (totalGrainWeight / formData.batchSize);
     const og = 1 + ogPoints / 1000;
-    
+
     const avgAttenuation = yeasts.length > 0
       ? yeasts.reduce((sum, y) => sum + (y.attenuation || 75), 0) / yeasts.length / 100
       : 0.75;
-    
+
     const fgPoints = ogPoints * (1 - avgAttenuation);
     const fg = 1 + fgPoints / 1000;
-    
+
     const abv = (og - fg) * 131.25;
-    
+
     const totalIbu = hops.reduce((sum, h) => {
       const weight = h.weight || 0;
       const alphaAcid = h.alphaAcid || 0;
       const time = h.time || 0;
       return sum + (weight * alphaAcid * time * 0.1) / formData.batchSize;
     }, 0);
-    
+
     const totalLovibond = grains.reduce((sum, g) => sum + (g.lovibond || 0) * (g.weight || 0), 0);
     const srm = totalGrainWeight > 0 ? 1.4922 * Math.pow(totalLovibond / totalGrainWeight * totalGrainWeight, 0.6859) : 0;
-    
+
     const calories = Math.round(og * 1000 * 0.82 + fg * 1000 * 0.18) * 3.55 / 10;
 
     return {
@@ -120,18 +153,18 @@ export function RecipeForm() {
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!formData.recipeName.trim()) {
       newErrors.recipeName = 'Recipe name is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validate()) {
       return;
     }
@@ -205,265 +238,442 @@ export function RecipeForm() {
     setYeasts(yeasts.filter((_, i) => i !== index));
   };
 
+  const getStepIndex = (step: StepKey) => steps.findIndex(s => s.key === step);
+  const currentStepIndex = getStepIndex(currentStep);
+
+  const canGoNext = () => {
+    if (currentStep === 'basic') return true;
+    if (currentStep === 'ingredients') return true;
+    return false;
+  };
+
+  const handleNext = () => {
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStep(steps[currentStepIndex + 1].key);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStep(steps[currentStepIndex - 1].key);
+    }
+  };
+
   if (fetchLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
+      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
         <div className="text-center">
-          <svg className="animate-spin h-12 w-12 text-amber-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p className="text-amber-700 text-lg">Loading recipe...</p>
+          <div className="w-12 h-12 border-4 border-amber-600/30 border-t-amber-600 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-400 text-lg font-display">Loading recipe...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-amber-800 mb-6">
-            {isEditMode ? 'Edit Recipe' : 'Create New Recipe'}
-          </h1>
+    <div className="min-h-screen bg-brewery-black pt-20 pb-10">
+      <div className="container mx-auto px-4">
+        <div className="max-w-3xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white font-display">
+              {isEditMode ? 'Edit Recipe' : 'Create New Recipe'}
+            </h1>
+            <p className="text-gray-400 mt-1">
+              {isEditMode ? 'Update your recipe details' : 'Build your perfect brew'}
+            </p>
+          </div>
+
+          {/* Step Indicator */}
+          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between">
+              {steps.map((step, index) => (
+                <div key={step.key} className="flex items-center flex-1 last:flex-none">
+                  <button
+                    onClick={() => setCurrentStep(step.key)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                      currentStep === step.key
+                        ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                        : index < currentStepIndex
+                        ? 'text-amber-500/60'
+                        : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      currentStep === step.key
+                        ? 'bg-amber-600 text-white'
+                        : index < currentStepIndex
+                        ? 'bg-amber-600/30 text-amber-400'
+                        : 'bg-gray-700 text-gray-400'
+                    }`}>
+                      {index < currentStepIndex ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        index + 1
+                      )}
+                    </div>
+                    <span className="hidden md:inline text-sm font-medium">{step.label}</span>
+                  </button>
+                  {index < steps.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-2 rounded ${
+                      index < currentStepIndex ? 'bg-amber-600/40' : 'bg-gray-700'
+                    }`} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
 
           {apiError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <div className="bg-red-600/10 border border-red-600/30 text-red-400 px-4 py-3 rounded-lg mb-6">
               {apiError}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-amber-800 mb-4">Recipe Details</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="recipeName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Recipe Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="recipeName"
-                    value={formData.recipeName}
-                    onChange={(e) => setFormData({ ...formData, recipeName: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200 ${
-                      errors.recipeName ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.recipeName && (
-                    <p className="mt-1 text-sm text-red-500">{errors.recipeName}</p>
+          <form onSubmit={handleSubmit}>
+            {/* Step 1: Basic Info */}
+            {currentStep === 'basic' && (
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-white font-display">Recipe Details</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label htmlFor="recipeName" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Recipe Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="recipeName"
+                      placeholder="e.g., West Coast IPA"
+                      value={formData.recipeName}
+                      onChange={(e) => setFormData({ ...formData, recipeName: e.target.value })}
+                      className={`w-full bg-gray-700/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all ${
+                        errors.recipeName ? 'border-red-500' : 'border-gray-600/50'
+                      }`}
+                    />
+                    {errors.recipeName && (
+                      <p className="mt-1 text-sm text-red-400">{errors.recipeName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="style" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Style
+                    </label>
+                    <input
+                      type="text"
+                      id="style"
+                      placeholder="e.g., American IPA"
+                      value={formData.style}
+                      onChange={(e) => setFormData({ ...formData, style: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="styleCode" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Style Code
+                    </label>
+                    <input
+                      type="text"
+                      id="styleCode"
+                      placeholder="e.g., 21A"
+                      value={formData.styleCode}
+                      onChange={(e) => setFormData({ ...formData, styleCode: e.target.value })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="method" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Method
+                    </label>
+                    <select
+                      id="method"
+                      value={formData.method}
+                      onChange={(e) => setFormData({ ...formData, method: e.target.value as FormData['method'] })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    >
+                      <option value="all_grain">All Grain</option>
+                      <option value="partial_mash">Partial Mash</option>
+                      <option value="extract">Extract</option>
+                      <option value="biab">BIAB</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="batchSize" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Batch Size (L)
+                    </label>
+                    <input
+                      type="number"
+                      id="batchSize"
+                      value={formData.batchSize}
+                      onChange={(e) => setFormData({ ...formData, batchSize: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="boilTimeMinutes" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Boil Time (min)
+                    </label>
+                    <input
+                      type="number"
+                      id="boilTimeMinutes"
+                      value={formData.boilTimeMinutes}
+                      onChange={(e) => setFormData({ ...formData, boilTimeMinutes: parseInt(e.target.value) || 0 })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="efficiency" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                      Efficiency (%)
+                    </label>
+                    <input
+                      type="number"
+                      id="efficiency"
+                      value={formData.efficiency}
+                      onChange={(e) => setFormData({ ...formData, efficiency: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Ingredients */}
+            {currentStep === 'ingredients' && (
+              <div className="space-y-6">
+                {/* Grains */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-white font-display">Fermentables</h2>
+                    <button
+                      type="button"
+                      onClick={addGrain}
+                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Grain
+                    </button>
+                  </div>
+
+                  {grains.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <p>No grains added yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {grains.map((grain, index) => (
+                        <GrainInput
+                          key={index}
+                          grain={grain}
+                          onChange={(updated) => updateGrain(index, updated)}
+                          onRemove={() => removeGrain(index)}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
 
-                <div>
-                  <label htmlFor="style" className="block text-sm font-medium text-gray-700 mb-1">
-                    Style
-                  </label>
-                  <input
-                    type="text"
-                    id="style"
-                    value={formData.style}
-                    onChange={(e) => setFormData({ ...formData, style: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-                  />
+                {/* Hops */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-white font-display">Hops</h2>
+                    <button
+                      type="button"
+                      onClick={addHop}
+                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Hop
+                    </button>
+                  </div>
+
+                  {hops.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                      <p>No hops added yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {hops.map((hop, index) => (
+                        <HopInput
+                          key={index}
+                          hop={hop}
+                          onChange={(updated) => updateHop(index, updated)}
+                          onRemove={() => removeHop(index)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label htmlFor="styleCode" className="block text-sm font-medium text-gray-700 mb-1">
-                    Style Code
-                  </label>
-                  <input
-                    type="text"
-                    id="styleCode"
-                    value={formData.styleCode}
-                    onChange={(e) => setFormData({ ...formData, styleCode: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-                  />
+                {/* Yeast */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-white font-display">Yeast</h2>
+                    <button
+                      type="button"
+                      onClick={addYeast}
+                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Yeast
+                    </button>
+                  </div>
+
+                  {yeasts.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                      </svg>
+                      <p>No yeast added yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {yeasts.map((yeast, index) => (
+                        <YeastInput
+                          key={index}
+                          yeast={yeast}
+                          onChange={(updated) => updateYeast(index, updated)}
+                          onRemove={() => removeYeast(index)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label htmlFor="method" className="block text-sm font-medium text-gray-700 mb-1">
-                    Method
-                  </label>
-                  <select
-                    id="method"
-                    value={formData.method}
-                    onChange={(e) => setFormData({ ...formData, method: e.target.value as FormData['method'] })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-                  >
-                    <option value="all_grain">All Grain</option>
-                    <option value="partial_mash">Partial Mash</option>
-                    <option value="extract">Extract</option>
-                    <option value="biab">BIAB</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="batchSize" className="block text-sm font-medium text-gray-700 mb-1">
-                    Batch Size (L)
-                  </label>
-                  <input
-                    type="number"
-                    id="batchSize"
-                    value={formData.batchSize}
-                    onChange={(e) => setFormData({ ...formData, batchSize: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="boilTimeMinutes" className="block text-sm font-medium text-gray-700 mb-1">
-                    Boil Time (min)
-                  </label>
-                  <input
-                    type="number"
-                    id="boilTimeMinutes"
-                    value={formData.boilTimeMinutes}
-                    onChange={(e) => setFormData({ ...formData, boilTimeMinutes: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="efficiency" className="block text-sm font-medium text-gray-700 mb-1">
-                    Efficiency (%)
-                  </label>
-                  <input
-                    type="number"
-                    id="efficiency"
-                    value={formData.efficiency}
-                    onChange={(e) => setFormData({ ...formData, efficiency: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+                {/* Live Stats */}
+                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                  <h2 className="text-xl font-semibold text-white mb-4 font-display">Calculated Stats</h2>
+                  <RecipeStats
+                    og={stats.og}
+                    fg={stats.fg}
+                    abv={stats.abv}
+                    ibu={stats.ibu}
+                    srm={stats.srm}
+                    calories={stats.calories}
                   />
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">Fermentables</h2>
-                <button
-                  type="button"
-                  onClick={addGrain}
-                  className="text-amber-600 hover:text-amber-800 font-medium"
-                >
-                  + Add Grain
-                </button>
-              </div>
-              
-              {grains.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No grains added yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {grains.map((grain, index) => (
-                    <GrainInput
-                      key={index}
-                      grain={grain}
-                      onChange={(updated) => updateGrain(index, updated)}
-                      onRemove={() => removeGrain(index)}
-                    />
-                  ))}
+            {/* Step 3: Instructions */}
+            {currentStep === 'instructions' && (
+              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-white font-display">Brewer Notes</h2>
+
+                <div>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    Notes &amp; Instructions
+                  </label>
+                  <textarea
+                    id="notes"
+                    rows={8}
+                    placeholder="Add any brewing notes, special instructions, or observations..."
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-none"
+                  />
                 </div>
-              )}
-            </div>
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">Hops</h2>
-                <button
-                  type="button"
-                  onClick={addHop}
-                  className="text-amber-600 hover:text-amber-800 font-medium"
-                >
-                  + Add Hop
-                </button>
-              </div>
-              
-              {hops.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hops added yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {hops.map((hop, index) => (
-                    <HopInput
-                      key={index}
-                      hop={hop}
-                      onChange={(updated) => updateHop(index, updated)}
-                      onRemove={() => removeHop(index)}
-                    />
-                  ))}
+                {/* Summary */}
+                <div className="bg-gray-700/30 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-amber-400 mb-3">Recipe Summary</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Name:</span>{' '}
+                      <span className="text-white">{formData.recipeName || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Style:</span>{' '}
+                      <span className="text-white">{formData.style || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Grains:</span>{' '}
+                      <span className="text-white">{grains.length} added</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Hops:</span>{' '}
+                      <span className="text-white">{hops.length} added</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Yeast:</span>{' '}
+                      <span className="text-white">{yeasts.length} added</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">Yeast</h2>
-                <button
-                  type="button"
-                  onClick={addYeast}
-                  className="text-amber-600 hover:text-amber-800 font-medium"
-                >
-                  + Add Yeast
-                </button>
               </div>
-              
-              {yeasts.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No yeast added yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {yeasts.map((yeast, index) => (
-                    <YeastInput
-                      key={index}
-                      yeast={yeast}
-                      onChange={(updated) => updateYeast(index, updated)}
-                      onRemove={() => removeYeast(index)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
 
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-amber-800 mb-4">Calculated Stats</h2>
-              <RecipeStats
-                og={stats.og}
-                fg={stats.fg}
-                abv={stats.abv}
-                ibu={stats.ibu}
-                srm={stats.srm}
-                calories={stats.calories}
-              />
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                rows={4}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-4">
+            {/* Navigation */}
+            <div className="flex justify-between mt-6">
               <button
                 type="button"
                 onClick={() => navigate('/recipes')}
-                className="px-6 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg transition duration-200"
+                className="px-6 py-3 border border-gray-600 text-gray-400 hover:text-white hover:border-gray-500 rounded-lg transition duration-200"
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50"
-              >
-                {loading ? 'Saving...' : 'Save Recipe'}
-              </button>
+
+              <div className="flex space-x-3">
+                {currentStepIndex > 0 && (
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    className="px-6 py-3 bg-gray-700/50 hover:bg-gray-700 text-white font-semibold rounded-lg transition duration-200"
+                  >
+                    Previous
+                  </button>
+                )}
+
+                {currentStepIndex < steps.length - 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={!canGoNext()}
+                    className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50"
+                  >
+                    Next Step
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Recipe
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </div>
