@@ -1,0 +1,88 @@
+<h2>Brew Timer — Phone Layout</h2>
+<p class="subtitle">Dashboard view: current step front and center, upcoming steps visible below</p>
+
+<div class="mockup">
+  <div class="mockup-header">📱 Brew Day Timer — Mash Step</div>
+  <div class="mockup-body" style="background: #1a1a2e; color: white; padding: 24px; border-radius: 16px; max-width: 375px; margin: 0 auto;">
+    
+    <!-- Top Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div style="font-size: 12px; color: #94a3b8;">Brew Day #1</div>
+      <div style="display: flex; gap: 8px;">
+        <button style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">⚙️ Settings</button>
+        <button style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px;">⏸️ Pause</button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; margin-bottom: 24px;">
+      <div style="background: #22c55e; height: 100%; width: 25%; border-radius: 3px;"></div>
+    </div>
+
+    <!-- Step Indicator -->
+    <div style="display: flex; justify-content: space-between; margin-bottom: 24px; font-size: 12px;">
+      <div style="color: #22c55e;">✓ Mash</div>
+      <div style="color: #f59e0b; font-weight: bold;">→ Boil</div>
+      <div style="color: #64748b;">Whirlpool</div>
+      <div style="color: #64748b;">Cool</div>
+    </div>
+
+    <!-- Current Step Card -->
+    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+      <div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-bottom: 8px;">🔥 BOIL</div>
+      <div style="font-size: 72px; font-weight: bold; font-family: monospace; line-height: 1;">58:42</div>
+      <div style="font-size: 14px; color: rgba(255,255,255,0.8); margin-top: 8px;">remaining</div>
+      
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: center;">
+        <button style="background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 12px 24px; border-radius: 12px; font-size: 16px; font-weight: bold;">Next Step →</button>
+      </div>
+    </div>
+
+    <!-- Next Hop Addition -->
+    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-size: 12px; color: #94a3b8;">NEXT HOP ADDITION</div>
+          <div style="font-size: 16px; font-weight: bold; margin-top: 4px;">🌿 Cascade — 14g</div>
+        </div>
+        <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">28:00</div>
+      </div>
+    </div>
+
+    <!-- Upcoming Steps Timeline -->
+    <div style="margin-bottom: 80px;">
+      <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px;">UPCOMING</div>
+      
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; opacity: 0.5;">
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: #64748b;"></div>
+        <div style="flex: 1; font-size: 14px;">Whirlpool</div>
+        <div style="font-size: 14px; color: #94a3b8;">15 min</div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; opacity: 0.3;">
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: #64748b;"></div>
+        <div style="flex: 1; font-size: 14px;">Cool & Transfer</div>
+        <div style="font-size: 14px; color: #94a3b8;">manual</div>
+      </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div style="position: absolute; bottom: 24px; right: 24px;">
+      <button style="width: 64px; height: 64px; border-radius: 50%; background: #22c55e; border: none; color: white; font-size: 32px; box-shadow: 0 4px 20px rgba(34,197,94,0.4); cursor: pointer;">+</button>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 32px;">Key Design Decisions</h3>
+<div class="section">
+  <ul style="list-style: none; padding: 0;">
+    <li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">🎯 <strong>72px countdown</strong> — readable at arm's length</li>
+    <li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">🌿 <strong>Next hop callout</strong> — always shows what's coming</li>
+    <li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">📊 <strong>Step timeline</strong> — upcoming steps visible but dimmed</li>
+    <li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">➕ <strong>FAB</strong> — log events from anywhere, one tap</li>
+    <li style="padding: 8px 0;">🌑 <strong>Dark theme</strong> — easy on eyes in bright garage, saves battery</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="margin-top: 24px;">Take a look at the mockup above. Does this layout feel right for brew day?</p>

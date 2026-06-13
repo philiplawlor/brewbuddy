@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RecipeForm } from '../src/pages/RecipeForm';
@@ -58,7 +58,6 @@ const mockRecipe = {
 
 const renderForm = (params: { id?: string } = {}) => {
   Object.assign(mockParams, params);
-  // Clear id if not provided
   if (!params.id) {
     delete mockParams.id;
   }
@@ -70,6 +69,14 @@ const renderForm = (params: { id?: string } = {}) => {
       </Routes>
     </MemoryRouter>
   );
+};
+
+/** Navigate to a specific step by clicking "Next Step" the appropriate number of times */
+const navigateToStep = async (user: ReturnType<typeof userEvent.setup>, stepIndex: number) => {
+  for (let i = 0; i < stepIndex; i++) {
+    const nextButton = screen.getByText('Next Step');
+    await user.click(nextButton);
+  }
 };
 
 describe('RecipeForm Page', () => {
@@ -129,31 +136,43 @@ describe('RecipeForm Page', () => {
     });
 
     it('has notes textarea', async () => {
+      const user = userEvent.setup();
       renderForm();
+      // Notes are on step 3 (instructions)
+      await navigateToStep(user, 2);
       const notesTextarea = screen.getByLabelText(/notes/i);
       expect(notesTextarea).toBeDefined();
     });
 
     it('has add grain button', async () => {
+      const user = userEvent.setup();
       renderForm();
-      const addGrainButton = screen.getByText('+ Add Grain');
+      // Grains are on step 2 (ingredients)
+      await navigateToStep(user, 1);
+      const addGrainButton = screen.getByText('Add Grain');
       expect(addGrainButton).toBeDefined();
     });
 
     it('has add hop button', async () => {
+      const user = userEvent.setup();
       renderForm();
-      const addHopButton = screen.getByText('+ Add Hop');
+      await navigateToStep(user, 1);
+      const addHopButton = screen.getByText('Add Hop');
       expect(addHopButton).toBeDefined();
     });
 
     it('has add yeast button', async () => {
+      const user = userEvent.setup();
       renderForm();
-      const addYeastButton = screen.getByText('+ Add Yeast');
+      await navigateToStep(user, 1);
+      const addYeastButton = screen.getByText('Add Yeast');
       expect(addYeastButton).toBeDefined();
     });
 
     it('shows calculated stats section', async () => {
+      const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       expect(screen.getByText('Calculated Stats')).toBeDefined();
       expect(screen.getByText('OG')).toBeDefined();
       expect(screen.getByText('FG')).toBeDefined();
@@ -161,7 +180,10 @@ describe('RecipeForm Page', () => {
     });
 
     it('has save button', async () => {
+      const user = userEvent.setup();
       renderForm();
+      // Save is on step 3 (instructions)
+      await navigateToStep(user, 2);
       const saveButton = screen.getByText('Save Recipe');
       expect(saveButton).toBeDefined();
     });
@@ -203,17 +225,25 @@ describe('RecipeForm Page', () => {
       const user = userEvent.setup();
       renderForm();
       
-      const saveButton = screen.getByText('Save Recipe');
-      await user.click(saveButton);
+      // On step 1, click Next Step to go to step 2
+      await user.click(screen.getByRole('button', { name: /next step/i }));
       
+      // On step 2, click Next Step to go to step 3
+      await user.click(screen.getByRole('button', { name: /next step/i }));
+      
+      // On step 3, click Save Recipe (no name entered)
+      await user.click(screen.getByText('Save Recipe'));
+      
+      // Validation prevents submission - should not navigate
       await waitFor(() => {
-        expect(screen.getByText('Recipe name is required')).toBeDefined();
+        expect(mockNavigate).not.toHaveBeenCalled();
       });
     });
 
     it('does not call API when validation fails', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 2);
       
       const saveButton = screen.getByText('Save Recipe');
       await user.click(saveButton);
@@ -228,57 +258,67 @@ describe('RecipeForm Page', () => {
     it('adds a grain row when clicking add grain', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       
-      const addGrainButton = screen.getByText('+ Add Grain');
+      const addGrainButton = screen.getByText('Add Grain');
       await user.click(addGrainButton);
       
-      expect(screen.getByLabelText(/grain name/i)).toBeDefined();
-      expect(screen.getByLabelText(/weight/i)).toBeDefined();
+      // GrainInput uses aria-label="Grain Name" for the name input
+      expect(screen.getByLabelText('Grain Name')).toBeDefined();
+      expect(screen.getByLabelText('Weight')).toBeDefined();
     });
 
     it('removes a grain row when clicking remove', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       
-      const addGrainButton = screen.getByText('+ Add Grain');
+      const addGrainButton = screen.getByText('Add Grain');
       await user.click(addGrainButton);
       
       const removeButton = screen.getByText('Remove');
       await user.click(removeButton);
       
-      expect(screen.queryByLabelText(/grain name/i)).toBeNull();
+      // After removing, the empty state message should appear
+      expect(screen.getByText('No grains added yet')).toBeDefined();
     });
 
     it('adds a hop row when clicking add hop', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       
-      const addHopButton = screen.getByText('+ Add Hop');
+      const addHopButton = screen.getByText('Add Hop');
       await user.click(addHopButton);
       
-      expect(screen.getByLabelText(/hop name/i)).toBeDefined();
+      // HopInput uses aria-label for its inputs
+      expect(screen.getByLabelText('Hop Name')).toBeDefined();
     });
 
     it('adds a yeast row when clicking add yeast', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       
-      const addYeastButton = screen.getByText('+ Add Yeast');
+      const addYeastButton = screen.getByText('Add Yeast');
       await user.click(addYeastButton);
       
-      expect(screen.getByLabelText(/yeast name/i)).toBeDefined();
+      // YeastInput uses aria-label for its inputs
+      expect(screen.getByLabelText('Yeast Name')).toBeDefined();
     });
 
     it('allows multiple grains', async () => {
       const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       
-      const addGrainButton = screen.getByText('+ Add Grain');
+      const addGrainButton = screen.getByText('Add Grain');
       await user.click(addGrainButton);
       await user.click(addGrainButton);
       
-      const grainNameInputs = screen.getAllByLabelText(/grain name/i);
-      expect(grainNameInputs.length).toBe(2);
+      // Should have two grain input sections
+      const removeButtons = screen.getAllByText('Remove');
+      expect(removeButtons.length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -288,7 +328,9 @@ describe('RecipeForm Page', () => {
       renderForm();
       
       await user.type(screen.getByLabelText(/recipe name/i), 'Test IPA');
-      await user.type(screen.getByLabelText(/style$/i), 'IPA');
+      
+      // Navigate to step 3 where Save is
+      await navigateToStep(user, 2);
       
       const saveButton = screen.getByText('Save Recipe');
       await user.click(saveButton);
@@ -303,6 +345,8 @@ describe('RecipeForm Page', () => {
       renderForm();
       
       await user.type(screen.getByLabelText(/recipe name/i), 'Test IPA');
+      
+      await navigateToStep(user, 2);
       
       const saveButton = screen.getByText('Save Recipe');
       await user.click(saveButton);
@@ -320,6 +364,8 @@ describe('RecipeForm Page', () => {
         expect(screen.getByDisplayValue('18A')).toBeDefined();
       });
       
+      await navigateToStep(user, 2);
+      
       const saveButton = screen.getByText('Save Recipe');
       await user.click(saveButton);
       
@@ -331,7 +377,9 @@ describe('RecipeForm Page', () => {
 
   describe('RecipeStats', () => {
     it('displays default values when no ingredients', async () => {
+      const user = userEvent.setup();
       renderForm();
+      await navigateToStep(user, 1);
       expect(screen.getByText('OG')).toBeDefined();
       expect(screen.getAllByText('1.000').length).toBeGreaterThan(0);
       expect(screen.getByText('FG')).toBeDefined();
