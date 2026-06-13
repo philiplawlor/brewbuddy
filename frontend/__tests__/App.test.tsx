@@ -13,8 +13,8 @@ describe('App', () => {
   it('renders login and register buttons on home page', () => {
     render(<App />);
     
-    const loginButton = screen.getByText('Login');
-    const registerButton = screen.getByText('Register');
+    const loginButton = screen.getByText('Sign In');
+    const registerButton = screen.getByText('Start Brewing');
     
     expect(loginButton).toBeInTheDocument();
     expect(registerButton).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe('App', () => {
   it('renders the tagline', () => {
     render(<App />);
     
-    const tagline = screen.getByText('Your modern brewing assistant');
+    const tagline = screen.getByText(/Your modern brewing assistant/);
     expect(tagline).toBeInTheDocument();
   });
 });

@@ -81,10 +81,10 @@ export function RecipeDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-600/30 border-t-amber-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-lg font-display">Loading recipe...</p>
+          <div className="w-12 h-12 border-4 border-t-current rounded-full animate-spin mx-auto mb-4" style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }} />
+          <p className="text-lg font-display" style={{ color: 'var(--text-secondary)' }}>Loading recipe...</p>
         </div>
       </div>
     );
@@ -92,21 +92,23 @@ export function RecipeDetail() {
 
   if (error || !recipe) {
     return (
-      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center max-w-md mx-auto p-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
+          <div className="card-theme rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-red-400 mb-4 font-display">Error</h2>
-            <p className="text-gray-400 mb-6">{error || 'Recipe not found'}</p>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>{error || 'Recipe not found'}</p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => id && fetchRecipe(id)}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+                className="text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+                style={{ backgroundColor: 'var(--accent-primary)' }}
               >
                 Try Again
               </button>
               <Link
                 to="/recipes"
-                className="border border-gray-600 text-gray-400 hover:text-white hover:border-gray-500 font-semibold py-2 px-4 rounded-lg transition duration-200"
+                className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 Back to Recipes
               </Link>
@@ -150,13 +152,14 @@ export function RecipeDetail() {
   ];
 
   return (
-    <div className="min-h-screen bg-brewery-black pt-20 pb-10">
+    <div className="min-h-screen pt-20 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Back Link */}
           <Link
             to="/recipes"
-            className="inline-flex items-center text-gray-400 hover:text-white mb-6 transition-colors"
+            className="inline-flex items-center mb-6 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -165,21 +168,21 @@ export function RecipeDetail() {
           </Link>
 
           {/* Hero Section */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden mb-6">
-            <div className="bg-gradient-to-r from-amber-600/20 to-orange-600/20 p-8 border-b border-gray-700/50">
+          <div className="card-theme rounded-2xl overflow-hidden mb-6">
+            <div className="p-8 border-b" style={{ background: 'linear-gradient(135deg, var(--tag-bg), transparent)', borderColor: 'var(--border-default)' }}>
               <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 font-display">
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2 font-display" style={{ color: 'var(--text-primary)' }}>
                     {recipe.recipeName}
                   </h1>
                   {recipe.style && (
-                    <p className="text-gray-400 text-lg">
-                      {recipe.styleCode && <span className="text-amber-400 mr-2">{recipe.styleCode}</span>}
+                    <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                      {recipe.styleCode && <span className="mr-2" style={{ color: 'var(--accent-primary)' }}>{recipe.styleCode}</span>}
                       {recipe.style}
                     </p>
                   )}
                   {recipe.method && (
-                    <span className="inline-block mt-2 text-xs font-medium text-amber-400 bg-amber-600/10 border border-amber-600/20 px-3 py-1 rounded-full">
+                    <span className="inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full tag-theme">
                       {methodLabels[recipe.method] || recipe.method}
                     </span>
                   )}
@@ -189,7 +192,8 @@ export function RecipeDetail() {
                   <div className="flex space-x-3">
                     <Link
                       to={`/recipes/${recipe._id}/edit`}
-                      className="bg-white/10 hover:bg-white/20 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 backdrop-blur-sm"
+                      className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
+                      style={{ color: 'var(--text-primary)' }}
                     >
                       Edit
                     </Link>
@@ -205,34 +209,34 @@ export function RecipeDetail() {
             </div>
 
             {/* Stats Bar */}
-            <div className="grid grid-cols-5 divide-x divide-gray-700/50">
+            <div className="grid grid-cols-5 divide-x" style={{ borderColor: 'var(--border-default)' }}>
               <div className="p-4 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">OG</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>OG</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   {recipe.estimatedOg?.toFixed(3) || '—'}
                 </p>
               </div>
               <div className="p-4 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">FG</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>FG</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   {recipe.estimatedFg?.toFixed(3) || '—'}
                 </p>
               </div>
               <div className="p-4 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">IBU</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>IBU</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   {recipe.estimatedIbu?.toFixed(1) || '—'}
                 </p>
               </div>
               <div className="p-4 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">SRM</p>
-                <p className="text-xl font-bold text-white">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>SRM</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   {recipe.estimatedSrm?.toFixed(1) || '—'}
                 </p>
               </div>
               <div className="p-4 text-center">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">ABV</p>
-                <p className="text-xl font-bold text-amber-400">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>ABV</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--accent-primary)' }}>
                   {recipe.estimatedAbv ? `${recipe.estimatedAbv.toFixed(1)}%` : '—'}
                 </p>
               </div>
@@ -241,39 +245,40 @@ export function RecipeDetail() {
 
           {/* Secondary Stats */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 text-center">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Batch Size</p>
-              <p className="text-lg font-bold text-white">
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Batch Size</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                 {recipe.batchSize ? `${recipe.batchSize} ${recipe.batchSizeUnit || 'L'}` : '—'}
               </p>
             </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 text-center">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Boil Time</p>
-              <p className="text-lg font-bold text-white">
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Boil Time</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                 {recipe.boilTimeMinutes ? `${recipe.boilTimeMinutes} min` : '—'}
               </p>
             </div>
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 text-center">
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Efficiency</p>
-              <p className="text-lg font-bold text-white">
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Efficiency</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                 {recipe.efficiency ? `${recipe.efficiency}%` : '—'}
               </p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl overflow-hidden">
+          <div className="card-theme rounded-2xl overflow-hidden">
             {/* Tab Navigation */}
-            <div className="flex border-b border-gray-700/50">
+            <div className="flex border-b" style={{ borderColor: 'var(--border-default)' }}>
               {tabs.map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 flex items-center justify-center gap-2 py-4 px-6 text-sm font-medium transition-all duration-200 ${
-                    activeTab === tab.key
-                      ? 'text-amber-400 border-b-2 border-amber-400 bg-amber-600/5'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 px-6 text-sm font-medium transition-all duration-200"
+                  style={{
+                    color: activeTab === tab.key ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    borderBottom: activeTab === tab.key ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                    backgroundColor: activeTab === tab.key ? 'var(--tag-bg)' : 'transparent',
+                  }}
                 >
                   {tab.icon}
                   {tab.label}
@@ -285,41 +290,41 @@ export function RecipeDetail() {
             <div className="p-6">
               {activeTab === 'ingredients' && (
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4 font-display">Ingredients</h2>
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Ingredients</h2>
                   {ingredients.length > 0 ? (
                     <IngredientList ingredients={ingredients} />
                   ) : (
-                    <p className="text-gray-400 text-center py-8">No ingredients added yet.</p>
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No ingredients added yet.</p>
                   )}
                 </div>
               )}
 
               {activeTab === 'instructions' && (
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4 font-display">Brewing Instructions</h2>
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brewing Instructions</h2>
                   <div className="space-y-4">
                     {recipe.method && (
-                      <div className="bg-gray-700/30 rounded-lg p-4">
-                        <h3 className="text-sm font-medium text-amber-400 mb-2">Brewing Method</h3>
-                        <p className="text-gray-300">
+                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Brewing Method</h3>
+                        <p style={{ color: 'var(--text-secondary)' }}>
                           {methodLabels[recipe.method] || recipe.method}
                         </p>
                       </div>
                     )}
-                    <div className="bg-gray-700/30 rounded-lg p-4">
-                      <h3 className="text-sm font-medium text-amber-400 mb-2">Batch Parameters</h3>
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Batch Parameters</h3>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-500">Batch Size:</span>{' '}
-                          <span className="text-gray-300">{recipe.batchSize ? `${recipe.batchSize} ${recipe.batchSizeUnit || 'L'}` : '—'}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Batch Size:</span>{' '}
+                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.batchSize ? `${recipe.batchSize} ${recipe.batchSizeUnit || 'L'}` : '—'}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500">Boil Time:</span>{' '}
-                          <span className="text-gray-300">{recipe.boilTimeMinutes ? `${recipe.boilTimeMinutes} minutes` : '—'}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Boil Time:</span>{' '}
+                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.boilTimeMinutes ? `${recipe.boilTimeMinutes} minutes` : '—'}</span>
                         </div>
                         <div>
-                          <span className="text-gray-500">Efficiency:</span>{' '}
-                          <span className="text-gray-300">{recipe.efficiency ? `${recipe.efficiency}%` : '—'}</span>
+                          <span style={{ color: 'var(--text-muted)' }}>Efficiency:</span>{' '}
+                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.efficiency ? `${recipe.efficiency}%` : '—'}</span>
                         </div>
                       </div>
                     </div>
@@ -329,13 +334,13 @@ export function RecipeDetail() {
 
               {activeTab === 'notes' && (
                 <div>
-                  <h2 className="text-xl font-semibold text-white mb-4 font-display">Brewer Notes</h2>
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brewer Notes</h2>
                   {recipe.notes ? (
-                    <div className="bg-gray-700/30 rounded-lg p-6">
-                      <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{recipe.notes}</p>
+                    <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <p className="whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{recipe.notes}</p>
                     </div>
                   ) : (
-                    <p className="text-gray-400 text-center py-8">No notes added yet.</p>
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No notes added yet.</p>
                   )}
                 </div>
               )}
@@ -343,7 +348,7 @@ export function RecipeDetail() {
           </div>
 
           {/* Timestamps */}
-          <div className="mt-6 text-sm text-gray-500 flex justify-between">
+          <div className="mt-6 text-sm flex justify-between" style={{ color: 'var(--text-muted)' }}>
             <span>Created: {recipe.createdAt ? new Date(recipe.createdAt).toLocaleDateString() : 'Unknown'}</span>
             {recipe.updatedAt && recipe.updatedAt !== recipe.createdAt && (
               <span>Updated: {new Date(recipe.updatedAt).toLocaleDateString()}</span>
@@ -354,17 +359,18 @@ export function RecipeDetail() {
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800/90 backdrop-blur-sm border border-gray-700/50 rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-4 font-display">Delete Recipe</h3>
-            <p className="text-gray-400 mb-6">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'var(--overlay-bg)' }}>
+          <div className="card-theme rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Delete Recipe</h3>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
               Are you sure you want to delete "{recipe.recipeName}"? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className="border border-gray-600 text-gray-400 hover:text-white hover:border-gray-500 font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 Cancel
               </button>

@@ -93,7 +93,10 @@ describe('Login Page', () => {
       </MemoryRouter>
     );
 
-    const container = screen.getByText('Welcome Back').closest('div');
+    // The "Welcome Back" heading is inside a card div, which is inside a max-w-md container
+    const heading = screen.getByText('Welcome Back');
+    const card = heading.closest('div');
+    const container = card?.parentElement;
     expect(container?.className).toContain('max-w-md');
   });
 });

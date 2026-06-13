@@ -8,14 +8,35 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Map Tailwind utilities to CSS variables
+        bg: {
+          primary: 'var(--bg-primary)',
+          secondary: 'var(--bg-secondary)',
+          card: 'var(--bg-card)',
+          input: 'var(--bg-input)',
+        },
+        text: {
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
+        },
+        accent: {
+          primary: 'var(--accent-primary)',
+          secondary: 'var(--accent-secondary)',
+          hover: 'var(--accent-hover)',
+        },
+        border: {
+          DEFAULT: 'var(--border-default)',
+          hover: 'var(--border-hover)',
+        },
         brewery: {
-          black: '#0a0a0a',
-          dark: '#1a1a1a',
-          card: '#2a2a2a',
-          amber: '#d97706',
-          copper: '#b45309',
-          cream: '#fafafa',
-          gray: '#a3a3a3',
+          black: 'var(--bg-primary)',
+          dark: 'var(--bg-secondary)',
+          card: 'var(--bg-card)',
+          amber: 'var(--accent-primary)',
+          copper: 'var(--accent-secondary)',
+          cream: 'var(--text-primary)',
+          gray: 'var(--text-secondary)',
         },
       },
       fontFamily: {
@@ -30,8 +51,8 @@ export default {
       },
       keyframes: {
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(217, 119, 6, 0.5)' },
-          '100%': { boxShadow: '0 0 20px rgba(217, 119, 6, 0.8)' },
+          '0%': { boxShadow: '0 0 5px var(--accent-primary)' },
+          '100%': { boxShadow: '0 0 20px var(--accent-primary)' },
         },
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },

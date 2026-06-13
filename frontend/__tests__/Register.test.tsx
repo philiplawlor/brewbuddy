@@ -134,8 +134,10 @@ describe('Register Page', () => {
       </MemoryRouter>
     );
 
+    // The "Create Account" heading is inside a card div, which is inside a max-w-md container
     const heading = screen.getByRole('heading', { name: /create account/i });
-    const container = heading.closest('div');
+    const card = heading.closest('div');
+    const container = card?.parentElement;
     expect(container?.className).toContain('max-w-md');
   });
 });

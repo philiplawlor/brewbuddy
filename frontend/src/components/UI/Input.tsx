@@ -10,18 +10,18 @@ export function Input({ label, error, icon, className = '', ...props }: InputPro
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
           {label}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}>
             {icon}
           </div>
         )}
         <input
-          className={`w-full bg-gray-800/50 border ${error ? 'border-red-500' : 'border-gray-700/50'} rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all ${icon ? 'pl-10' : ''} ${className}`}
+          className={`w-full input-theme rounded-lg px-4 py-3 ${error ? 'border-red-500' : ''} ${icon ? 'pl-10' : ''} ${className}`}
           {...props}
         />
       </div>
@@ -39,12 +39,12 @@ export function Textarea({ label, error, className = '', ...props }: TextareaPro
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-300 mb-2">
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
           {label}
         </label>
       )}
       <textarea
-        className={`w-full bg-gray-800/50 border ${error ? 'border-red-500' : 'border-gray-700/50'} rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-none ${className}`}
+        className={`w-full input-theme rounded-lg px-4 py-3 ${error ? 'border-red-500' : ''} resize-none ${className}`}
         {...props}
       />
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}

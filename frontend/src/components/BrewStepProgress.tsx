@@ -26,8 +26,8 @@ export function BrewStepProgress({ steps, currentStep }: BrewStepProgressProps) 
                   isComplete
                     ? 'bg-green-500 border-green-500 text-white'
                     : isCurrent
-                    ? 'bg-amber-500 border-amber-500 text-white scale-110 shadow-lg'
-                    : 'bg-white border-gray-300 text-gray-400'
+                    ? 'bg-accent-primary border-accent-primary text-brewery-black scale-110 shadow-lg'
+                    : 'bg-primary border-secondary text-secondary'
                 }`}
               >
                 {isComplete ? '✓' : STEP_ICONS[step] || (index + 1)}
@@ -35,10 +35,10 @@ export function BrewStepProgress({ steps, currentStep }: BrewStepProgressProps) 
               <span
                 className={`text-xs mt-1.5 font-medium capitalize ${
                   isCurrent
-                    ? 'text-amber-700'
+                    ? 'text-accent-primary'
                     : isComplete
                     ? 'text-green-600'
-                    : 'text-gray-400'
+                    : 'text-secondary'
                 }`}
               >
                 {step}
@@ -50,7 +50,7 @@ export function BrewStepProgress({ steps, currentStep }: BrewStepProgressProps) 
               <div className="flex-1 mx-2">
                 <div
                   className={`h-0.5 rounded transition-all duration-300 ${
-                    isComplete ? 'bg-green-500' : 'bg-gray-200'
+                    isComplete ? 'bg-green-500' : 'bg-secondary'
                   }`}
                 />
               </div>

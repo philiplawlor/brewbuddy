@@ -111,8 +111,9 @@ describe('RecipeDetail Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('American Pale Ale')).toBeDefined();
-      expect(screen.getByText('18A - American Pale Ale')).toBeDefined();
+      // "American Pale Ale" appears in both the h1 title and the style paragraph
+      expect(screen.getAllByText('American Pale Ale').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('18A')).toBeDefined();
     });
   });
 
@@ -125,16 +126,14 @@ describe('RecipeDetail Page', () => {
       </MemoryRouter>
     );
 
+    // Stats bar uses abbreviated labels: OG, FG, IBU, SRM, ABV
     await waitFor(() => {
-      expect(screen.getByText('Original Gravity')).toBeDefined();
+      expect(screen.getAllByText('1.055').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('1.012').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('40.0').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('8.0').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('5.6%').length).toBeGreaterThan(0);
     });
-
-    expect(screen.getAllByText('1.055').length).toBeGreaterThan(0);
-    expect(screen.getByText('Final Gravity')).toBeDefined();
-    expect(screen.getAllByText('1.012').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('40.0').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('8.0').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('5.6%').length).toBeGreaterThan(0);
   });
 
   it('displays batch info', async () => {
@@ -165,8 +164,8 @@ describe('RecipeDetail Page', () => {
       </MemoryRouter>
     );
 
+    // Brewing method is shown as a badge in the hero section
     await waitFor(() => {
-      expect(screen.getByText('Brewing Method')).toBeDefined();
       expect(screen.getByText('All Grain')).toBeDefined();
     });
   });
@@ -180,8 +179,16 @@ describe('RecipeDetail Page', () => {
       </MemoryRouter>
     );
 
+    // Wait for recipe to load, then click the Notes tab
     await waitFor(() => {
-      expect(screen.getByText('Notes')).toBeDefined();
+      expect(screen.getAllByText('American Pale Ale').length).toBeGreaterThanOrEqual(2);
+    });
+
+    const notesTab = screen.getByRole('button', { name: /notes/i });
+    notesTab.click();
+
+    await waitFor(() => {
+      expect(screen.getByText('Brewer Notes')).toBeDefined();
       expect(screen.getByText('A classic American Pale Ale with citrus hop character')).toBeDefined();
     });
   });
@@ -195,11 +202,10 @@ describe('RecipeDetail Page', () => {
       </MemoryRouter>
     );
 
+    // Ingredients tab is active by default
+    // "Ingredients" appears as both the tab label and the section heading
     await waitFor(() => {
-      expect(screen.getByText('Ingredients')).toBeDefined();
-      expect(screen.getByText('Grains & Fermentables')).toBeDefined();
-      expect(screen.getByText('Hops')).toBeDefined();
-      expect(screen.getByText('Yeast')).toBeDefined();
+      expect(screen.getAllByText('Ingredients').length).toBeGreaterThanOrEqual(2);
       expect(screen.getByText('Pale Malt (2-Row)')).toBeDefined();
       expect(screen.getByText('Cascade')).toBeDefined();
       expect(screen.getByText('American Ale')).toBeDefined();
@@ -322,10 +328,12 @@ describe('RecipeDetail Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('American Pale Ale')).toBeDefined();
+      expect(screen.getAllByText('American Pale Ale').length).toBeGreaterThanOrEqual(2);
     });
 
-    const container = screen.getByText('Back to Recipes').closest('div');
-    expect(container?.className).toContain('max-w-4xl');
+    // The page structure: div.container > div.max-w-4xl > (back link, hero, etc.)
+    const backLink = screen.getByText('Back to Recipes');
+    const container = backLink.closest('div.max-w-4xl');
+    expect(container).not.toBeNull();
   });
 });

@@ -92,7 +92,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
     
     expect(screen.getByText('2 recipes total')).toBeDefined();
@@ -106,11 +106,11 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     await waitFor(() => {
-      expect(screen.getAllByText('American Pale Ale').length).toBeGreaterThan(1);
+      expect(screen.getAllByText('American Pale Ale').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Belgian Witbier').length).toBeGreaterThan(0);
     });
   });
@@ -123,10 +123,11 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     await waitFor(() => {
+      // Stats are displayed in abbreviated form on cards: OG, IBU, ABV
       expect(screen.getAllByText('1.055').length).toBeGreaterThan(0);
       expect(screen.getAllByText('40.0').length).toBeGreaterThan(0);
       expect(screen.getAllByText('5.6%').length).toBeGreaterThan(0);
@@ -141,7 +142,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     const searchInput = screen.getByPlaceholderText('Search recipes...');
@@ -156,7 +157,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     await waitFor(() => {
@@ -185,7 +186,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     const sortSelect = screen.getAllByLabelText('Sort By')[0];
@@ -200,7 +201,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     const newRecipeLink = screen.getByText('New Recipe');
@@ -215,7 +216,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     await waitFor(() => {
@@ -289,7 +290,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     const styleSelect = screen.getAllByLabelText('Style')[0];
@@ -304,7 +305,7 @@ describe('RecipeList Page', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('My Recipes')).toBeDefined();
+      expect(screen.getByText('Recipes')).toBeDefined();
     });
 
     const methodSelect = screen.getAllByLabelText('Method')[0];

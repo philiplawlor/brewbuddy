@@ -261,31 +261,31 @@ export function RecipeForm() {
 
   if (fetchLoading) {
     return (
-      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-600/30 border-t-amber-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-lg font-display">Loading recipe...</p>
+          <div className="w-12 h-12 border-4 border-accent-secondary/30 border-t-accent-secondary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary text-lg font-display">Loading recipe...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-brewery-black pt-20 pb-10">
+    <div className="min-h-screen pt-20 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white font-display">
+            <h1 className="text-3xl font-bold text-primary font-display">
               {isEditMode ? 'Edit Recipe' : 'Create New Recipe'}
             </h1>
-            <p className="text-gray-400 mt-1">
+            <p className="text-secondary mt-1">
               {isEditMode ? 'Update your recipe details' : 'Build your perfect brew'}
             </p>
           </div>
 
           {/* Step Indicator */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-6">
+          <div className="card-theme rounded-xl p-4 mb-6">
             <div className="flex items-center justify-between">
               {steps.map((step, index) => (
                 <div key={step.key} className="flex items-center flex-1 last:flex-none">
@@ -293,18 +293,18 @@ export function RecipeForm() {
                     onClick={() => setCurrentStep(step.key)}
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                       currentStep === step.key
-                        ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                        ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/30'
                         : index < currentStepIndex
-                        ? 'text-amber-500/60'
-                        : 'text-gray-500 hover:text-gray-300'
+                        ? 'text-accent-primary/60'
+                        : 'text-muted hover:text-primary'
                     }`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                       currentStep === step.key
-                        ? 'bg-amber-600 text-white'
+                        ? 'bg-accent-primary text-brewery-black'
                         : index < currentStepIndex
-                        ? 'bg-amber-600/30 text-amber-400'
-                        : 'bg-gray-700 text-gray-400'
+                        ? 'bg-accent-primary/30 text-accent-primary'
+                        : 'bg-secondary text-muted'
                     }`}>
                       {index < currentStepIndex ? (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,7 +318,7 @@ export function RecipeForm() {
                   </button>
                   {index < steps.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-2 rounded ${
-                      index < currentStepIndex ? 'bg-amber-600/40' : 'bg-gray-700'
+                      index < currentStepIndex ? 'bg-accent-primary/40' : 'bg-secondary'
                     }`} />
                   )}
                 </div>
@@ -335,12 +335,12 @@ export function RecipeForm() {
           <form onSubmit={handleSubmit}>
             {/* Step 1: Basic Info */}
             {currentStep === 'basic' && (
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 space-y-6">
-                <h2 className="text-xl font-semibold text-white font-display">Recipe Details</h2>
+              <div className="card-theme rounded-2xl p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-primary font-display">Recipe Details</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label htmlFor="recipeName" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="recipeName" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Recipe Name <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -349,8 +349,8 @@ export function RecipeForm() {
                       placeholder="e.g., West Coast IPA"
                       value={formData.recipeName}
                       onChange={(e) => setFormData({ ...formData, recipeName: e.target.value })}
-                      className={`w-full bg-gray-700/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all ${
-                        errors.recipeName ? 'border-red-500' : 'border-gray-600/50'
+                      className={`input-theme w-full rounded-lg px-4 py-3 transition-all ${
+                        errors.recipeName ? 'border-red-500' : ''
                       }`}
                     />
                     {errors.recipeName && (
@@ -359,7 +359,7 @@ export function RecipeForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="style" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="style" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Style
                     </label>
                     <input
@@ -368,12 +368,12 @@ export function RecipeForm() {
                       placeholder="e.g., American IPA"
                       value={formData.style}
                       onChange={(e) => setFormData({ ...formData, style: e.target.value })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="styleCode" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="styleCode" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Style Code
                     </label>
                     <input
@@ -382,19 +382,19 @@ export function RecipeForm() {
                       placeholder="e.g., 21A"
                       value={formData.styleCode}
                       onChange={(e) => setFormData({ ...formData, styleCode: e.target.value })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="method" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="method" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Method
                     </label>
                     <select
                       id="method"
                       value={formData.method}
                       onChange={(e) => setFormData({ ...formData, method: e.target.value as FormData['method'] })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     >
                       <option value="all_grain">All Grain</option>
                       <option value="partial_mash">Partial Mash</option>
@@ -404,7 +404,7 @@ export function RecipeForm() {
                   </div>
 
                   <div>
-                    <label htmlFor="batchSize" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="batchSize" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Batch Size (L)
                     </label>
                     <input
@@ -412,12 +412,12 @@ export function RecipeForm() {
                       id="batchSize"
                       value={formData.batchSize}
                       onChange={(e) => setFormData({ ...formData, batchSize: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="boilTimeMinutes" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="boilTimeMinutes" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Boil Time (min)
                     </label>
                     <input
@@ -425,12 +425,12 @@ export function RecipeForm() {
                       id="boilTimeMinutes"
                       value={formData.boilTimeMinutes}
                       onChange={(e) => setFormData({ ...formData, boilTimeMinutes: parseInt(e.target.value) || 0 })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="efficiency" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                    <label htmlFor="efficiency" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                       Efficiency (%)
                     </label>
                     <input
@@ -438,7 +438,7 @@ export function RecipeForm() {
                       id="efficiency"
                       value={formData.efficiency}
                       onChange={(e) => setFormData({ ...formData, efficiency: parseFloat(e.target.value) || 0 })}
-                      className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                      className="input-theme w-full rounded-lg px-4 py-3 transition-all"
                     />
                   </div>
                 </div>
@@ -449,13 +449,13 @@ export function RecipeForm() {
             {currentStep === 'ingredients' && (
               <div className="space-y-6">
                 {/* Grains */}
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                <div className="card-theme rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-white font-display">Fermentables</h2>
+                    <h2 className="text-xl font-semibold text-primary font-display">Fermentables</h2>
                     <button
                       type="button"
                       onClick={addGrain}
-                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                      className="text-accent-primary hover:text-accent-hover text-sm font-medium flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -465,8 +465,8 @@ export function RecipeForm() {
                   </div>
 
                   {grains.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center py-8 text-muted">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
                       <p>No grains added yet</p>
@@ -486,13 +486,13 @@ export function RecipeForm() {
                 </div>
 
                 {/* Hops */}
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                <div className="card-theme rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-white font-display">Hops</h2>
+                    <h2 className="text-xl font-semibold text-primary font-display">Hops</h2>
                     <button
                       type="button"
                       onClick={addHop}
-                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                      className="text-accent-primary hover:text-accent-hover text-sm font-medium flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -502,8 +502,8 @@ export function RecipeForm() {
                   </div>
 
                   {hops.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center py-8 text-muted">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
                       <p>No hops added yet</p>
@@ -523,13 +523,13 @@ export function RecipeForm() {
                 </div>
 
                 {/* Yeast */}
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
+                <div className="card-theme rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-white font-display">Yeast</h2>
+                    <h2 className="text-xl font-semibold text-primary font-display">Yeast</h2>
                     <button
                       type="button"
                       onClick={addYeast}
-                      className="text-amber-400 hover:text-amber-300 text-sm font-medium flex items-center gap-1"
+                      className="text-accent-primary hover:text-accent-hover text-sm font-medium flex items-center gap-1"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -539,8 +539,8 @@ export function RecipeForm() {
                   </div>
 
                   {yeasts.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <svg className="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="text-center py-8 text-muted">
+                      <svg className="w-12 h-12 mx-auto mb-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                       </svg>
                       <p>No yeast added yet</p>
@@ -560,8 +560,8 @@ export function RecipeForm() {
                 </div>
 
                 {/* Live Stats */}
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6">
-                  <h2 className="text-xl font-semibold text-white mb-4 font-display">Calculated Stats</h2>
+                <div className="card-theme rounded-2xl p-6">
+                  <h2 className="text-xl font-semibold text-primary mb-4 font-display">Calculated Stats</h2>
                   <RecipeStats
                     og={stats.og}
                     fg={stats.fg}
@@ -576,11 +576,11 @@ export function RecipeForm() {
 
             {/* Step 3: Instructions */}
             {currentStep === 'instructions' && (
-              <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 space-y-6">
-                <h2 className="text-xl font-semibold text-white font-display">Brewer Notes</h2>
+              <div className="card-theme rounded-2xl p-6 space-y-6">
+                <h2 className="text-xl font-semibold text-primary font-display">Brewer Notes</h2>
 
                 <div>
-                  <label htmlFor="notes" className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                  <label htmlFor="notes" className="block text-xs font-medium text-secondary mb-2 uppercase tracking-wider">
                     Notes &amp; Instructions
                   </label>
                   <textarea
@@ -589,33 +589,33 @@ export function RecipeForm() {
                     placeholder="Add any brewing notes, special instructions, or observations..."
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-none"
+                    className="input-theme w-full rounded-lg px-4 py-3 transition-all resize-none"
                   />
                 </div>
 
                 {/* Summary */}
-                <div className="bg-gray-700/30 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-amber-400 mb-3">Recipe Summary</h3>
+                <div className="bg-secondary/30 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-accent-primary mb-3">Recipe Summary</h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-500">Name:</span>{' '}
-                      <span className="text-white">{formData.recipeName || '—'}</span>
+                      <span className="text-muted">Name:</span>{' '}
+                      <span className="text-primary">{formData.recipeName || '—'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Style:</span>{' '}
-                      <span className="text-white">{formData.style || '—'}</span>
+                      <span className="text-muted">Style:</span>{' '}
+                      <span className="text-primary">{formData.style || '—'}</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Grains:</span>{' '}
-                      <span className="text-white">{grains.length} added</span>
+                      <span className="text-muted">Grains:</span>{' '}
+                      <span className="text-primary">{grains.length} added</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Hops:</span>{' '}
-                      <span className="text-white">{hops.length} added</span>
+                      <span className="text-muted">Hops:</span>{' '}
+                      <span className="text-primary">{hops.length} added</span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Yeast:</span>{' '}
-                      <span className="text-white">{yeasts.length} added</span>
+                      <span className="text-muted">Yeast:</span>{' '}
+                      <span className="text-primary">{yeasts.length} added</span>
                     </div>
                   </div>
                 </div>
@@ -627,7 +627,7 @@ export function RecipeForm() {
               <button
                 type="button"
                 onClick={() => navigate('/recipes')}
-                className="px-6 py-3 border border-gray-600 text-gray-400 hover:text-white hover:border-gray-500 rounded-lg transition duration-200"
+                className="px-6 py-3 border border-secondary text-secondary hover:text-primary hover:border-primary rounded-lg transition duration-200"
               >
                 Cancel
               </button>
@@ -637,7 +637,7 @@ export function RecipeForm() {
                   <button
                     type="button"
                     onClick={handlePrev}
-                    className="px-6 py-3 bg-gray-700/50 hover:bg-gray-700 text-white font-semibold rounded-lg transition duration-200"
+                    className="px-6 py-3 bg-secondary/50 hover:bg-secondary text-primary font-semibold rounded-lg transition duration-200"
                   >
                     Previous
                   </button>
@@ -648,7 +648,7 @@ export function RecipeForm() {
                     type="button"
                     onClick={handleNext}
                     disabled={!canGoNext()}
-                    className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50"
+                    className="px-6 py-3 bg-accent-secondary hover:bg-accent-hover text-primary font-semibold rounded-lg transition duration-200 disabled:opacity-50"
                   >
                     Next Step
                   </button>
@@ -656,11 +656,11 @@ export function RecipeForm() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 disabled:opacity-50 flex items-center gap-2"
+                    className="px-6 py-3 bg-accent-secondary hover:bg-accent-hover text-primary font-semibold rounded-lg transition duration-200 disabled:opacity-50 flex items-center gap-2"
                   >
                     {loading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                         Saving...
                       </>
                     ) : (
