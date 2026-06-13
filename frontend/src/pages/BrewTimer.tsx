@@ -39,22 +39,22 @@ export function BrewTimer({ sessionId: propSessionId }: BrewTimerProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
+    <div className="min-h-screen text-primary p-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-gray-400">Brew Day #{sessionId.slice(-3)}</div>
+        <div className="text-sm text-secondary">Brew Day #{sessionId.slice(-3)}</div>
         <div className="flex gap-2">
-          <button className="bg-white/10 px-3 py-1 rounded text-sm">⚙️ Settings</button>
-          <button onClick={skip} className="bg-white/10 px-3 py-1 rounded text-sm">⏭️ Skip</button>
+          <button className="bg-primary/10 px-3 py-1 rounded text-sm">⚙️ Settings</button>
+          <button onClick={skip} className="bg-primary/10 px-3 py-1 rounded text-sm">⏭️ Skip</button>
         </div>
       </div>
 
       {/* Step Progress */}
       <div className="flex justify-between mb-6 text-sm">
-        <div className={currentStep === 'MASH' ? 'text-green-500 font-bold' : 'text-gray-500'}>✓ Mash</div>
-        <div className={currentStep === 'BOIL' ? 'text-amber-500 font-bold' : 'text-gray-500'}>→ Boil</div>
-        <div className={currentStep === 'WHIRLPOOL' ? 'text-blue-500 font-bold' : 'text-gray-500'}>Whirlpool</div>
-        <div className={currentStep === 'COOL' ? 'text-purple-500 font-bold' : 'text-gray-500'}>Cool</div>
+        <div className={currentStep === 'MASH' ? 'text-green-500 font-bold' : 'text-muted'}>✓ Mash</div>
+        <div className={currentStep === 'BOIL' ? 'text-accent-primary font-bold' : 'text-muted'}>→ Boil</div>
+        <div className={currentStep === 'WHIRLPOOL' ? 'text-blue-500 font-bold' : 'text-muted'}>Whirlpool</div>
+        <div className={currentStep === 'COOL' ? 'text-purple-500 font-bold' : 'text-muted'}>Cool</div>
       </div>
 
       {/* Timer */}
