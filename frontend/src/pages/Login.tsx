@@ -55,8 +55,8 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-brewery-black flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-brewery-black to-brewery-black" />
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--tag-bg), var(--bg-primary), var(--bg-primary))' }} />
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
@@ -66,8 +66,8 @@ export function Login() {
           </Link>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
-          <h2 className="font-display text-2xl font-bold text-center mb-6 text-white">Welcome Back</h2>
+        <div className="card-theme rounded-2xl p-8">
+          <h2 className="font-display text-2xl font-bold text-center mb-6" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
@@ -77,14 +77,14 @@ export function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Email</label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="you@example.com"
                 required
               />
@@ -92,14 +92,14 @@ export function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Password</label>
               <input
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="••••••••"
                 required
               />
@@ -109,7 +109,8 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-display font-semibold rounded-lg transition-all hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 text-white font-display font-semibold rounded-lg transition-all hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: 'var(--accent-primary)' }}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -125,9 +126,9 @@ export function Login() {
             </button>
           </form>
 
-          <p className="text-center text-gray-400 mt-6">
+          <p className="text-center mt-6" style={{ color: 'var(--text-secondary)' }}>
             Don't have an account?{' '}
-            <Link to="/register" className="text-amber-400 hover:text-amber-300">
+            <Link to="/register" style={{ color: 'var(--accent-primary)' }}>
               Register
             </Link>
           </p>

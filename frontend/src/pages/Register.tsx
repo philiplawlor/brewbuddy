@@ -72,8 +72,8 @@ export function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-brewery-black flex items-center justify-center px-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-900/10 via-brewery-black to-brewery-black" />
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--tag-bg), var(--bg-primary), var(--bg-primary))' }} />
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
@@ -83,8 +83,8 @@ export function Register() {
           </Link>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
-          <h2 className="font-display text-2xl font-bold text-center mb-6 text-white">Create Account</h2>
+        <div className="card-theme rounded-2xl p-8">
+          <h2 className="font-display text-2xl font-bold text-center mb-6" style={{ color: 'var(--text-primary)' }}>Create Account</h2>
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6">
@@ -94,14 +94,14 @@ export function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+              <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Username</label>
               <input
                 type="text"
                 id="username"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="brewmaster42"
                 required
                 minLength={3}
@@ -110,14 +110,14 @@ export function Register() {
             </div>
 
             <div>
-              <label htmlFor="reg-email" className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+              <label htmlFor="reg-email" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Email</label>
               <input
                 type="email"
                 id="reg-email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="you@example.com"
                 required
               />
@@ -125,14 +125,14 @@ export function Register() {
             </div>
 
             <div>
-              <label htmlFor="reg-password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+              <label htmlFor="reg-password" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Password</label>
               <input
                 type="password"
                 id="reg-password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -141,14 +141,14 @@ export function Register() {
             </div>
 
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-300 mb-2">Display Name</label>
+              <label htmlFor="displayName" className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Display Name</label>
               <input
                 type="text"
                 id="displayName"
                 name="displayName"
                 value={formData.displayName}
                 onChange={handleChange}
-                className="w-full bg-gray-900/50 border border-gray-700/50 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                className="w-full input-theme rounded-lg px-4 py-3"
                 placeholder="Brew Master (optional)"
               />
               {errors.displayName && <p className="text-red-400 text-sm mt-1">{errors.displayName}</p>}
@@ -157,7 +157,8 @@ export function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-display font-semibold rounded-lg transition-all hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 text-white font-display font-semibold rounded-lg transition-all hover-glow disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: 'var(--accent-primary)' }}
             >
               {loading ? (
                 <span className="flex items-center justify-center">
@@ -173,9 +174,9 @@ export function Register() {
             </button>
           </form>
 
-          <p className="text-center text-gray-400 mt-6">
+          <p className="text-center mt-6" style={{ color: 'var(--text-secondary)' }}>
             Already have an account?{' '}
-            <Link to="/login" className="text-amber-400 hover:text-amber-300">
+            <Link to="/login" style={{ color: 'var(--accent-primary)' }}>
               Login
             </Link>
           </p>
