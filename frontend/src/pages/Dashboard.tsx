@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { recipeAPI, brewSessionAPI } from '../services/api';
-import { Recipe, BrewSession, STATUS_LABELS, STATUS_COLORS } from '../types';
+import { Recipe, BrewSession } from '../types';
 
 export function Dashboard() {
-  const { user, logout } = useAuth();
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [activeSessions, setActiveSessions] = useState<BrewSession[]>([]);
-  const [plannedSessions, setPlannedSessions] = useState<BrewSession[]>([]);
+  const [stats, setStats] = useState({
+    totalRecipes: 0,
+    activeSessions: 0,
+    completedSessions: 0,
+  });
+  const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,267 +19,111 @@ export function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [recipesRes, activeRes, plannedRes] = await Promise.all([
+      const [recipesRes, sessionsRes] = await Promise.all([
         recipeAPI.getRecipes({ limit: 5, sort: '-createdAt' }),
-        brewSessionAPI.getSessions({ status: 'in_progress', limit: 5 }),
-        brewSessionAPI.getSessions({ status: 'planned', limit: 5 }),
+        brewSessionAPI.getSessions({ limit: 10 }),
       ]);
-      setRecipes(recipesRes.data.recipes || []);
-      setActiveSessions(activeRes.data.sessions || []);
-      setPlannedSessions(plannedRes.data.sessions || []);
+      const recipes = recipesRes.data.recipes || [];
+      const sessions = sessionsRes.data.sessions || [];
+      setRecentRecipes(recipes);
+      setStats({
+        totalRecipes: recipesRes.data.total || recipes.length,
+        activeSessions: sessions.filter((s: BrewSession) => s.status === 'in_progress').length,
+        completedSessions: sessions.filter((s: BrewSession) => s.status === 'bottled' || s.status === 'consumed').length,
+      });
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
+      console.error('Failed to load dashboard:', err);
     } finally {
       setLoading(false);
     }
   };
 
+  const statCards = [
+    { label: 'Total Recipes', value: stats.totalRecipes, icon: '📜', color: 'amber' },
+    { label: 'Active Brews', value: stats.activeSessions, icon: '🍺', color: 'green' },
+    { label: 'Completed', value: stats.completedSessions, icon: '✅', color: 'blue' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-brewery-black pt-20 pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-amber-800">
-              Welcome back, {user?.name || user?.email?.split('@')[0] || 'Brewer'}!
-            </h1>
-            <p className="text-amber-600 mt-1">Here's what's brewing</p>
-          </div>
-          <button
-            onClick={logout}
-            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
-          >
-            Logout
-          </button>
+        <div className="mb-8">
+          <h1 className="font-display text-4xl font-bold mb-2">
+            Welcome to <span className="gradient-text">BrewBuddy</span>
+          </h1>
+          <p className="text-gray-400">Your brewing dashboard</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          {statCards.map((stat, index) => (
+            <div
+              key={index}
+              className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover-glow"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">{stat.label}</p>
+                  <p className="font-display text-3xl font-bold">{stat.value}</p>
+                </div>
+                <span className="text-4xl">{stat.icon}</span>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <Link
-            to="/recipes"
-            className="bg-white rounded-lg shadow-md p-6 border border-amber-100 hover:border-amber-300 hover:shadow-lg transition-all duration-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl group-hover:scale-110 transition-transform">📚</span>
-              <div>
-                <p className="font-semibold text-amber-800">Recipes</p>
-                <p className="text-sm text-gray-500">Browse & create</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/brew-sessions"
-            className="bg-white rounded-lg shadow-md p-6 border border-amber-100 hover:border-amber-300 hover:shadow-lg transition-all duration-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl group-hover:scale-110 transition-transform">🍺</span>
-              <div>
-                <p className="font-semibold text-amber-800">Brew Sessions</p>
-                <p className="text-sm text-gray-500">Track brew days</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/recipes"
-            className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-md p-6 transition-all duration-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl group-hover:scale-110 transition-transform">➕</span>
-              <div>
-                <p className="font-semibold">New Recipe</p>
-                <p className="text-sm text-amber-100">Start designing</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            to="/brew-sessions"
-            className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-md p-6 transition-all duration-200 group"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-3xl group-hover:scale-110 transition-transform">🔥</span>
-              <div>
-                <p className="font-semibold">Start Brewing</p>
-                <p className="text-sm text-amber-100">Begin a session</p>
-              </div>
-            </div>
-          </Link>
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 mb-8">
+          <h2 className="font-display text-xl font-semibold mb-4">Quick Actions</h2>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/recipes"
+              className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition-all hover-glow"
+            >
+              + New Recipe
+            </Link>
+            <Link
+              to="/brew-sessions"
+              className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-all"
+            >
+              View Brew Sessions
+            </Link>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin h-8 w-8 border-4 border-amber-600 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-amber-700">Loading dashboard...</p>
+        {/* Recent Recipes */}
+        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-xl font-semibold">Recent Recipes</h2>
+            <Link to="/recipes" className="text-amber-400 hover:text-amber-300 text-sm">
+              View All →
+            </Link>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Active Brew Sessions */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-amber-100">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">
-                  🔥 Active Brew Sessions
-                </h2>
-                <Link
-                  to="/brew-sessions"
-                  className="text-sm text-amber-600 hover:text-amber-700 font-medium"
-                >
-                  View all →
-                </Link>
-              </div>
-              {activeSessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-4xl mb-2">🍺</p>
-                  <p>No active brew sessions</p>
-                  <Link
-                    to="/brew-sessions"
-                    className="text-amber-600 hover:text-amber-700 font-medium text-sm"
-                  >
-                    Start one →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {activeSessions.map((session) => (
-                    <Link
-                      key={session._id}
-                      to={`/brew-sessions/${session._id}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-amber-50 transition duration-200"
-                    >
-                      <div>
-                        <p className="font-medium text-amber-800">
-                          {session.sessionName ||
-                            (typeof session.recipeId === 'object'
-                              ? (session.recipeId as any).recipeName
-                              : 'Brew Session')}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(session.brewDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span
-                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[session.status]}`}
-                      >
-                        {STATUS_LABELS[session.status]}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
+          {loading ? (
+            <div className="text-center py-8 text-gray-400">Loading...</div>
+          ) : recentRecipes.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-400 mb-4">No recipes yet</p>
+              <Link to="/recipes" className="text-amber-400 hover:text-amber-300">
+                Create your first recipe
+              </Link>
             </div>
-
-            {/* Planned Sessions */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-amber-100">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">
-                  📅 Upcoming Sessions
-                </h2>
+          ) : (
+            <div className="space-y-3">
+              {recentRecipes.map((recipe) => (
                 <Link
-                  to="/brew-sessions"
-                  className="text-sm text-amber-600 hover:text-amber-700 font-medium"
+                  key={recipe._id}
+                  to={`/recipes/${recipe._id}`}
+                  className="block p-4 bg-gray-900/50 rounded-lg hover:bg-gray-900 transition-colors"
                 >
-                  View all →
+                  <h3 className="font-semibold">{recipe.recipeName}</h3>
+                  <p className="text-sm text-gray-400">{recipe.style}</p>
                 </Link>
-              </div>
-              {plannedSessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-4xl mb-2">📅</p>
-                  <p>No planned sessions</p>
-                  <Link
-                    to="/brew-sessions"
-                    className="text-amber-600 hover:text-amber-700 font-medium text-sm"
-                  >
-                    Plan one →
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {plannedSessions.map((session) => (
-                    <Link
-                      key={session._id}
-                      to={`/brew-sessions/${session._id}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-amber-50 transition duration-200"
-                    >
-                      <div>
-                        <p className="font-medium text-amber-800">
-                          {session.sessionName ||
-                            (typeof session.recipeId === 'object'
-                              ? (session.recipeId as any).recipeName
-                              : 'Brew Session')}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(session.brewDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <span
-                        className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[session.status]}`}
-                      >
-                        {STATUS_LABELS[session.status]}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
-
-            {/* Recent Recipes */}
-            <div className="bg-white rounded-lg shadow-md p-6 border border-amber-100 lg:col-span-2">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-amber-800">
-                  📚 Recent Recipes
-                </h2>
-                <Link
-                  to="/recipes"
-                  className="text-sm text-amber-600 hover:text-amber-700 font-medium"
-                >
-                  View all →
-                </Link>
-              </div>
-              {recipes.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p className="text-4xl mb-2">📝</p>
-                  <p>No recipes yet</p>
-                  <Link
-                    to="/recipes"
-                    className="text-amber-600 hover:text-amber-700 font-medium text-sm"
-                  >
-                    Create your first →
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recipes.map((recipe) => (
-                    <Link
-                      key={recipe._id}
-                      to={`/recipes/${recipe._id}`}
-                      className="p-4 rounded-lg border border-amber-100 hover:border-amber-300 hover:shadow-md transition-all duration-200"
-                    >
-                      <h3 className="font-semibold text-amber-800 line-clamp-1">
-                        {recipe.recipeName}
-                      </h3>
-                      {recipe.style && (
-                        <p className="text-sm text-gray-500 mt-1">{recipe.style}</p>
-                      )}
-                      <div className="flex gap-4 mt-3 text-sm">
-                        {recipe.estimatedOg && (
-                          <span className="text-gray-600">
-                            OG: {recipe.estimatedOg.toFixed(3)}
-                          </span>
-                        )}
-                        {recipe.estimatedAbv && (
-                          <span className="text-gray-600">
-                            ABV: {recipe.estimatedAbv.toFixed(1)}%
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
