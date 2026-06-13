@@ -16,12 +16,12 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles = 'font-display font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2';
-  
-  const variants = {
-    primary: 'bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-600/30',
-    secondary: 'bg-gray-700 hover:bg-gray-600 text-white',
-    ghost: 'bg-transparent hover:bg-white/10 text-white border border-white/20',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
+
+  const variantClasses: Record<string, string> = {
+    primary: 'text-white',
+    secondary: 'text-white',
+    ghost: 'border',
+    danger: 'text-white',
   };
 
   const sizes = {
@@ -30,9 +30,17 @@ export function Button({
     lg: 'px-6 py-3 text-lg',
   };
 
+  const variantStyles: Record<string, React.CSSProperties> = {
+    primary: { backgroundColor: 'var(--accent-primary)' },
+    secondary: { backgroundColor: 'var(--bg-secondary)' },
+    ghost: { backgroundColor: 'transparent', borderColor: 'var(--border-default)', color: 'var(--text-primary)' },
+    danger: { backgroundColor: '#dc2626' },
+  };
+
   return (
     <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`${baseStyles} ${variantClasses[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      style={variantStyles[variant]}
       disabled={disabled || isLoading}
       {...props}
     >
