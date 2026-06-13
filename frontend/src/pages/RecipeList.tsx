@@ -13,8 +13,8 @@ const methodLabels: Record<string, string> = {
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="text-center">
-      <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-0.5">{label}</p>
-      <p className="text-sm font-bold text-white">{value}</p>
+      <p className="text-[10px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{value}</p>
     </div>
   );
 }
@@ -102,10 +102,10 @@ export function RecipeList() {
 
   if (loading && recipes.length === 0) {
     return (
-      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-amber-600/30 border-t-amber-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-lg font-display">Loading recipes...</p>
+          <div className="w-12 h-12 border-4 border-t-current rounded-full animate-spin mx-auto mb-4" style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }} />
+          <p className="text-lg font-display" style={{ color: 'var(--text-secondary)' }}>Loading recipes...</p>
         </div>
       </div>
     );
@@ -113,14 +113,15 @@ export function RecipeList() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-brewery-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center max-w-md mx-auto p-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-8">
+          <div className="card-theme rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-red-400 mb-4 font-display">Error</h2>
-            <p className="text-gray-400 mb-6">{error}</p>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>{error}</p>
             <button
               onClick={fetchRecipes}
-              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+              className="text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+              style={{ backgroundColor: 'var(--accent-primary)' }}
             >
               Try Again
             </button>
@@ -131,20 +132,21 @@ export function RecipeList() {
   }
 
   return (
-    <div className="min-h-screen bg-brewery-black pt-20 pb-10">
+    <div className="min-h-screen pt-20 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-white font-display">Recipes</h1>
-              <p className="text-gray-400 mt-1">
+              <h1 className="text-3xl font-bold font-display" style={{ color: 'var(--text-primary)' }}>Recipes</h1>
+              <p className="mt-1" style={{ color: 'var(--text-secondary)' }}>
                 {totalRecipes} recipe{totalRecipes !== 1 ? 's' : ''} total
               </p>
             </div>
             <Link
               to="/recipes/new"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center shadow-lg shadow-amber-600/20"
+              className="text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center"
+              style={{ backgroundColor: 'var(--accent-primary)' }}
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -154,10 +156,10 @@ export function RecipeList() {
           </div>
 
           {/* Filters */}
-          <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 mb-8">
+          <div className="card-theme rounded-xl p-4 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
-                <label htmlFor="search" className="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">
+                <label htmlFor="search" className="block text-xs font-medium mb-1 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Search
                 </label>
                 <input
@@ -166,19 +168,19 @@ export function RecipeList() {
                   placeholder="Search recipes..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                  className="w-full input-theme rounded-lg px-4 py-2"
                 />
               </div>
 
               <div>
-                <label htmlFor="style" className="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">
+                <label htmlFor="style" className="block text-xs font-medium mb-1 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Style
                 </label>
                 <select
                   id="style"
                   value={filterStyle}
                   onChange={handleStyleFilter}
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                  className="w-full input-theme rounded-lg px-4 py-2"
                 >
                   <option value="">All Styles</option>
                   {uniqueStyles.map(style => (
@@ -188,14 +190,14 @@ export function RecipeList() {
               </div>
 
               <div>
-                <label htmlFor="sort" className="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">
+                <label htmlFor="sort" className="block text-xs font-medium mb-1 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Sort By
                 </label>
                 <select
                   id="sort"
                   value={sortBy}
                   onChange={handleSort}
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                  className="w-full input-theme rounded-lg px-4 py-2"
                 >
                   <option value="-createdAt">Newest First</option>
                   <option value="createdAt">Oldest First</option>
@@ -207,14 +209,14 @@ export function RecipeList() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <div>
-                <label htmlFor="method" className="block text-xs font-medium text-gray-400 mb-1 uppercase tracking-wider">
+                <label htmlFor="method" className="block text-xs font-medium mb-1 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                   Method
                 </label>
                 <select
                   id="method"
                   value={filterMethod}
                   onChange={handleMethodFilter}
-                  className="w-full bg-gray-700/50 border border-gray-600/50 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all"
+                  className="w-full input-theme rounded-lg px-4 py-2"
                 >
                   <option value="">All Methods</option>
                   {uniqueMethods.map(method => (
@@ -227,14 +229,14 @@ export function RecipeList() {
 
           {/* Recipe Grid or Empty State */}
           {filteredRecipes.length === 0 ? (
-            <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-12 text-center">
-              <div className="w-16 h-16 bg-amber-600/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="card-theme rounded-xl p-12 text-center">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'var(--tag-bg)' }}>
+                <svg className="w-8 h-8" style={{ color: 'var(--accent-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2 font-display">No recipes found</h3>
-              <p className="text-gray-400 mb-6">
+              <h3 className="text-xl font-semibold mb-2 font-display" style={{ color: 'var(--text-primary)' }}>No recipes found</h3>
+              <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
                 {recipes.length === 0
                   ? "You haven't created any recipes yet."
                   : "No recipes match your search criteria."}
@@ -242,7 +244,8 @@ export function RecipeList() {
               {recipes.length === 0 && (
                 <Link
                   to="/recipes/new"
-                  className="inline-block bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+                  className="inline-block text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+                  style={{ backgroundColor: 'var(--accent-primary)' }}
                 >
                   Create Your First Recipe
                 </Link>
@@ -256,15 +259,15 @@ export function RecipeList() {
                   <Link
                     key={recipe._id}
                     to={`/recipes/${recipe._id}`}
-                    className="group bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-amber-600/30 hover:shadow-[0_0_30px_rgba(217,119,6,0.1)] transition-all duration-300"
+                    className="group card-theme rounded-xl p-6 transition-all duration-300"
                   >
                     {/* Card Header */}
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-amber-400 transition-colors font-display">
+                      <h3 className="text-lg font-semibold line-clamp-1 transition-colors font-display" style={{ color: 'var(--text-primary)' }}>
                         {recipe.recipeName}
                       </h3>
                       {recipe.style && (
-                        <span className="text-[10px] font-medium text-amber-400 bg-amber-600/10 border border-amber-600/20 px-2 py-1 rounded-full whitespace-nowrap ml-2">
+                        <span className="text-[10px] font-medium px-2 py-1 rounded-full whitespace-nowrap ml-2 tag-theme">
                           {recipe.styleCode && `${recipe.styleCode} - `}{recipe.style}
                         </span>
                       )}
@@ -272,13 +275,13 @@ export function RecipeList() {
 
                     {/* Method Badge */}
                     {recipe.method && (
-                      <p className="text-sm text-gray-400 mb-4">
+                      <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
                         {methodLabels[recipe.method] || recipe.method}
                       </p>
                     )}
 
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-3 gap-3 mb-4 p-3 bg-gray-700/30 rounded-lg">
+                    <div className="grid grid-cols-3 gap-3 mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--bg-secondary)' }}>
                       <MiniStat label="OG" value={recipe.estimatedOg?.toFixed(3) || '—'} />
                       <MiniStat label="IBU" value={recipe.estimatedIbu?.toFixed(1) || '—'} />
                       <MiniStat label="ABV" value={recipe.estimatedAbv ? `${recipe.estimatedAbv.toFixed(1)}%` : '—'} />
@@ -286,7 +289,7 @@ export function RecipeList() {
 
                     {/* Batch Info */}
                     {recipe.batchSize && (
-                      <div className="flex items-center text-sm text-gray-500">
+                      <div className="flex items-center text-sm" style={{ color: 'var(--text-muted)' }}>
                         <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
@@ -296,7 +299,7 @@ export function RecipeList() {
 
                     {/* Arrow indicator */}
                     <div className="flex justify-end mt-4">
-                      <svg className="w-5 h-5 text-gray-600 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 transition-all" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
@@ -310,19 +313,21 @@ export function RecipeList() {
                   <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-400 hover:text-white hover:border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200"
+                    className="px-4 py-2 card-theme rounded-lg transition duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     Previous
                   </button>
 
-                  <span className="px-4 py-2 text-gray-400 text-sm">
+                  <span className="px-4 py-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
                     Page {page} of {totalPages}
                   </span>
 
                   <button
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="px-4 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-gray-400 hover:text-white hover:border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200"
+                    className="px-4 py-2 card-theme rounded-lg transition duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                    style={{ color: 'var(--text-secondary)' }}
                   >
                     Next
                   </button>
