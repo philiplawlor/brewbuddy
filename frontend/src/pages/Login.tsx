@@ -104,6 +104,11 @@ export function Login() {
                 required
               />
               {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password}</p>}
+              <div className="text-right mt-1">
+                <Link to="/forgot-password" className="text-sm" style={{ color: 'var(--accent-primary)' }}>
+                  Forgot Password?
+                </Link>
+              </div>
             </div>
 
             <button

@@ -1,9 +1,12 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { body } from 'express-validator';
 import { validate } from '../middleware/validate';
 import { auth } from '../middleware/auth';
 import { generateToken } from '../utils/generateToken';
 import User from '../models/User';
+import PasswordResetToken from '../models/PasswordResetToken';
+import { sendPasswordResetEmail } from '../services/email';
 
 export const authRouter = Router();
 
@@ -133,3 +136,107 @@ authRouter.get('/me', auth, async (req: Request, res: Response) => {
     throw error;
   }
 });
+
+// Forgot Password — send reset email
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Please provide a valid email'),
+];
+
+authRouter.post(
+  '/forgot-password',
+  validate(forgotPasswordValidation),
+  async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      // Find user by email
+      const user = await User.findOne({ email });
+
+      // Always return success to prevent email enumeration
+      if (!user) {
+        return res.status(200).json({
+          message: 'If an account exists with that email, a reset link has been sent.',
+        });
+      }
+
+      // Delete any existing tokens for this user
+      await PasswordResetToken.deleteMany({ userId: user._id });
+
+      // Generate secure token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+      // Save token
+      await PasswordResetToken.create({
+        userId: user._id,
+        token: resetToken,
+        expiresAt,
+      });
+
+      // Send email
+      await sendPasswordResetEmail({
+        to: user.email,
+        username: user.username,
+        resetToken,
+      });
+
+      res.status(200).json({
+        message: 'If an account exists with that email, a reset link has been sent.',
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+// Reset Password — validate token and update password
+const resetPasswordValidation = [
+  body('token')
+    .trim()
+    .isLength({ min: 64, max: 64 })
+    .withMessage('Invalid reset token'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+];
+
+authRouter.post(
+  '/reset-password',
+  validate(resetPasswordValidation),
+  async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+
+      // Find valid token
+      const resetTokenDoc = await PasswordResetToken.findOne({
+        token,
+        expiresAt: { $gt: new Date() },
+      });
+
+      if (!resetTokenDoc) {
+        return res.status(400).json({ message: 'Invalid or expired reset token' });
+      }
+
+      // Find user and update password
+      const user = await User.findById(resetTokenDoc.userId);
+
+      if (!user) {
+        return res.status(400).json({ message: 'Invalid or expired reset token' });
+      }
+
+      // Set new password — pre-save hook will hash it
+      user.passwordHash = password;
+      await user.save();
+
+      // Delete the used token
+      await PasswordResetToken.deleteMany({ userId: user._id });
+
+      res.status(200).json({ message: 'Password reset successful' });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
