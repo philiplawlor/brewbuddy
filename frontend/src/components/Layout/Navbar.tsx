@@ -10,6 +10,7 @@ export function Navbar() {
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/recipes', label: 'Recipes', icon: '📜' },
     { path: '/brew-sessions', label: 'Brew Sessions', icon: '🍺' },
+    { path: '/community', label: 'Community', icon: '🌍' },
   ];
 
   return (

@@ -619,6 +619,23 @@ export function RecipeForm() {
                     </div>
                   </div>
                 </div>
+
+                {/* Share Toggle */}
+                <div className="flex items-center justify-between p-4 bg-secondary/20 rounded-lg">
+                  <div>
+                    <p className="font-medium text-primary">Share with Community</p>
+                    <p className="text-sm text-muted">Make this recipe visible to other brewers</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isPublic || false}
+                      onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-secondary rounded-full peer peer-checked:bg-accent-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                  </label>
+                </div>
               </div>
             )}
 

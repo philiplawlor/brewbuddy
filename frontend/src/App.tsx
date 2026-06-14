@@ -13,6 +13,8 @@ import { BrewSessionList } from './pages/BrewSessionList';
 import { BrewSessionDetail } from './pages/BrewSessionDetail';
 import { BrewTimer } from './pages/BrewTimer';
 import { Landing } from './pages/Landing';
+import { Community } from './pages/Community';
+import { CommunityRecipeDetail } from './pages/CommunityRecipeDetail';
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -45,6 +47,8 @@ function AppRoutes() {
         <Route path="/brew-sessions" element={<BrewSessionList />} />
         <Route path="/brew-sessions/:id" element={<BrewSessionDetail />} />
         <Route path="/brew-sessions/:id/timer" element={<BrewTimer />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/community/recipe/:id" element={<CommunityRecipeDetail />} />
       </Route>
     </Routes>
   );

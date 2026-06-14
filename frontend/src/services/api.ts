@@ -62,6 +62,30 @@ export const recipeAPI = {
   
   deleteRecipe: (id: string) =>
     api.delete(`/recipes/${id}`),
+
+  // Community endpoints
+  getCommunityRecipes: (params?: { page?: number; limit?: number; search?: string; style?: string; sort?: string }) =>
+    api.get('/recipes/community', { params }),
+  
+  getCommunityRecipeById: (id: string) =>
+    api.get(`/recipes/community/${id}`),
+
+  // Rating endpoints
+  rateRecipe: (id: string, data: { rating: number }) =>
+    api.post(`/recipes/${id}/rate`, data),
+  
+  getRecipeRatings: (id: string) =>
+    api.get(`/recipes/${id}/ratings`),
+
+  // Comment endpoints
+  addComment: (id: string, data: { text: string }) =>
+    api.post(`/recipes/${id}/comments`, data),
+  
+  getComments: (id: string) =>
+    api.get(`/recipes/${id}/comments`),
+  
+  deleteComment: (id: string, commentId: string) =>
+    api.delete(`/recipes/${id}/comments/${commentId}`),
 };
 
 // Brew Session API
