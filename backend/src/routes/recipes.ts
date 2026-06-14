@@ -3,6 +3,8 @@ import { body } from 'express-validator';
 import { validate } from '../middleware/validate';
 import { auth } from '../middleware/auth';
 import Recipe from '../models/Recipe';
+import Rating from '../models/Rating';
+import Comment from '../models/Comment';
 
 export const recipeRouter = Router();
 
@@ -188,6 +190,253 @@ recipeRouter.post(
     }
   }
 );
+
+// Rating endpoints
+recipeRouter.post(
+  '/:id/rate',
+  auth,
+  [body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')],
+  validate([body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5')]),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!._id;
+      const { rating } = req.body;
+
+      const recipe = await Recipe.findById(id);
+      if (!recipe) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+
+      // Upsert rating
+      const existingRating = await Rating.findOne({ recipeId: id, userId });
+      if (existingRating) {
+        existingRating.rating = rating;
+        await existingRating.save();
+      } else {
+        await Rating.create({ recipeId: id, userId, rating });
+      }
+
+      // Recalculate averages
+      const stats = await Rating.aggregate([
+        { $match: { recipeId: recipe._id } },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: '$rating' },
+            ratingCount: { $sum: 1 },
+          },
+        },
+      ]);
+
+      const averageRating = stats.length > 0 ? Math.round(stats[0].averageRating * 10) / 10 : 0;
+      const ratingCount = stats.length > 0 ? stats[0].ratingCount : 0;
+
+      // Update recipe
+      recipe.averageRating = averageRating;
+      recipe.ratingCount = ratingCount;
+      await recipe.save();
+
+      res.status(200).json({ rating, averageRating, ratingCount });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+recipeRouter.get('/:id/ratings', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+
+    const recipe = await Recipe.findById(id).lean();
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    let userRating = null;
+    if (userId) {
+      const rating = await Rating.findOne({ recipeId: id, userId }).lean();
+      userRating = rating ? rating.rating : null;
+    }
+
+    res.status(200).json({
+      averageRating: recipe.averageRating || 0,
+      ratingCount: recipe.ratingCount || 0,
+      userRating,
+    });
+  } catch (error) {
+    throw error;
+  }
+});
+
+// Comment endpoints
+recipeRouter.post(
+  '/:id/comments',
+  auth,
+  [body('text').trim().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters')],
+  validate([body('text').trim().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters')]),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!._id;
+      const { text } = req.body;
+
+      const recipe = await Recipe.findById(id);
+      if (!recipe) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+
+      const comment = await Comment.create({ recipeId: id, userId, text });
+
+      // Populate user info
+      const populatedComment = await Comment.findById(comment._id)
+        .populate('userId', 'username')
+        .lean();
+
+      res.status(201).json({ comment: populatedComment });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+recipeRouter.get('/:id/comments', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const recipe = await Recipe.findById(id).lean();
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const comments = await Comment.find({ recipeId: id })
+      .populate('userId', 'username')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({ comments });
+  } catch (error) {
+    throw error;
+  }
+});
+
+recipeRouter.delete('/:id/comments/:commentId', auth, async (req: Request, res: Response) => {
+  try {
+    const { id, commentId } = req.params;
+    const userId = req.user!._id;
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.recipeId.toString() !== id) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: 'You can only delete your own comments' });
+    }
+
+    await Comment.findByIdAndDelete(commentId);
+
+    res.status(200).json({ message: 'Comment deleted successfully' });
+  } catch (error) {
+    throw error;
+  }
+});
+
+// Community endpoints (public)
+recipeRouter.get('/community', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 12));
+    const search = (req.query.search as string) || '';
+    const style = (req.query.style as string) || '';
+    const sort = (req.query.sort as string) || 'rating';
+
+    const skip = (page - 1) * limit;
+
+    const filter: Record<string, any> = { isPublic: true, isArchived: false };
+
+    if (style) {
+      filter.style = style;
+    }
+
+    if (search) {
+      filter.recipeName = { $regex: search, $options: 'i' };
+    }
+
+    let sortOptions: Record<string, 1 | -1> = {};
+    switch (sort) {
+      case 'rating':
+        sortOptions = { averageRating: -1, ratingCount: -1 };
+        break;
+      case 'popular':
+        sortOptions = { ratingCount: -1 };
+        break;
+      case 'newest':
+        sortOptions = { createdAt: -1 };
+        break;
+      case 'oldest':
+        sortOptions = { createdAt: 1 };
+        break;
+      default:
+        sortOptions = { averageRating: -1, ratingCount: -1 };
+    }
+
+    const recipes = await Recipe.find(filter)
+      .populate('userId', 'username')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Recipe.countDocuments(filter);
+    const pages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      recipes,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages,
+      },
+    });
+  } catch (error) {
+    throw error;
+  }
+});
+
+recipeRouter.get('/community/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const recipe = await Recipe.findById(id)
+      .populate('userId', 'username')
+      .lean();
+
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    if (!recipe.isPublic) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    // Get comments
+    const comments = await Comment.find({ recipeId: id })
+      .populate('userId', 'username')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({ recipe, comments });
+  } catch (error) {
+    throw error;
+  }
+});
 
 recipeRouter.get('/:id', auth, async (req: Request, res: Response) => {
   try {

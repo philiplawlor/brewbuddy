@@ -135,6 +135,9 @@ const recipeSchema = new Schema<RecipeDocument>(
       max: [50, 'Taste rating must be between 0 and 50'],
     },
 
+    averageRating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
+
     mashProfile: { type: mashProfileSchema },
     fermentationProfile: { type: fermentationProfileSchema },
   },

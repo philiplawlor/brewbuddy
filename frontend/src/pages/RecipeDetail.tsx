@@ -79,6 +79,25 @@ export function RecipeDetail() {
     }
   };
 
+  const handleShareToggle = async () => {
+    if (!id || !recipe) return;
+
+    const newIsPublic = !recipe.isPublic;
+    const action = newIsPublic ? 'share' : 'unshare';
+
+    if (!window.confirm(newIsPublic ? 'Share this recipe with the community?' : 'Unshare this recipe?')) {
+      return;
+    }
+
+    try {
+      await recipeAPI.updateRecipe(id, { isPublic: newIsPublic });
+      setRecipe({ ...recipe, isPublic: newIsPublic });
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || `Failed to ${action} recipe`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -197,6 +216,17 @@ export function RecipeDetail() {
                     >
                       Edit
                     </Link>
+                    <button
+                      onClick={handleShareToggle}
+                      className={`font-semibold py-2 px-4 rounded-lg transition duration-200 ${
+                        recipe.isPublic
+                          ? 'bg-accent-primary/20 text-accent-primary border border-accent-primary/30'
+                          : 'card-theme'
+                      }`}
+                      style={!recipe.isPublic ? { color: 'var(--text-primary)' } : undefined}
+                    >
+                      {recipe.isPublic ? '🌍 Shared' : '🔗 Share'}
+                    </button>
                     <button
                       onClick={() => setShowDeleteModal(true)}
                       className="bg-red-600/80 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
