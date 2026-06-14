@@ -208,6 +208,21 @@ describe('RecipeList Page', () => {
     expect(newRecipeLink).toBeDefined();
   });
 
+  it('shows import button linking to import page', async () => {
+    render(
+      <MemoryRouter>
+        <RecipeList />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Recipes')).toBeDefined();
+    });
+
+    const importLink = screen.getByText('Import');
+    expect(importLink).toBeDefined();
+  });
+
   it('links recipe cards to detail page', async () => {
     render(
       <MemoryRouter>

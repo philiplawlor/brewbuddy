@@ -15,6 +15,7 @@ import { BrewTimer } from './pages/BrewTimer';
 import { Landing } from './pages/Landing';
 import { Community } from './pages/Community';
 import { CommunityRecipeDetail } from './pages/CommunityRecipeDetail';
+import { ImportRecipe } from './pages/ImportRecipe';
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/recipes" element={<RecipeList />} />
+        <Route path="/recipes/import" element={<ImportRecipe />} />
         <Route path="/recipes/new" element={<RecipeForm />} />
         <Route path="/recipes/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:id/edit" element={<RecipeForm />} />
