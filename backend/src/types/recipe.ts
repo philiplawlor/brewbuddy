@@ -64,6 +64,9 @@ export interface IRecipe {
   tasteNotes?: string;
   tasteRating?: number;
 
+  averageRating?: number;
+  ratingCount?: number;
+
   mashProfile?: IMashProfile;
   fermentationProfile?: IFermentationProfile;
 

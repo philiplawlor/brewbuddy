@@ -18,7 +18,7 @@ interface CommentSectionProps {
   onDelete: (commentId: string) => Promise<void>;
 }
 
-export function CommentSection({ recipeId, comments, onAdd, onDelete }: CommentSectionProps) {
+export function CommentSection({ comments, onAdd, onDelete }: CommentSectionProps) {
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +100,7 @@ export function CommentSection({ recipeId, comments, onAdd, onDelete }: CommentS
                     {new Date(comment.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                {user && user._id === comment.userId?._id && (
+                {user && (user as any)._id === comment.userId?._id && (
                   <button
                     onClick={() => handleDelete(comment._id)}
                     className="text-muted hover:text-red-400 transition-colors"

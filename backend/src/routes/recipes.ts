@@ -5,6 +5,7 @@ import { auth } from '../middleware/auth';
 import Recipe from '../models/Recipe';
 import Rating from '../models/Rating';
 import Comment from '../models/Comment';
+import { parseBeerXML, exportToBeerXML } from '../services/BeerXMLParser';
 
 export const recipeRouter = Router();
 
@@ -433,6 +434,112 @@ recipeRouter.get('/community/:id', async (req: Request, res: Response) => {
       .lean();
 
     res.status(200).json({ recipe, comments });
+  } catch (error) {
+    throw error;
+  }
+});
+
+// BeerXML Import endpoint
+recipeRouter.post(
+  '/import',
+  auth,
+  [body('xml').trim().isLength({ min: 1 }).withMessage('XML content is required')],
+  validate([body('xml').trim().isLength({ min: 1 }).withMessage('XML content is required')]),
+  async (req: Request, res: Response) => {
+    try {
+      const { xml } = req.body;
+
+      // Sentinel: file size check at app level
+      if (xml.length > 1_048_576) {
+        return res.status(413).json({ error: 'XML file too large. Maximum size is 1MB.' });
+      }
+
+      const parsed = await parseBeerXML(xml);
+
+      // Return parsed recipe for preview (not saved yet)
+      res.status(200).json({
+        recipe: parsed.recipe,
+        hops: parsed.hops,
+        fermentables: parsed.fermentables,
+        yeasts: parsed.yeasts,
+        mashProfile: parsed.mashProfile,
+      });
+    } catch (error: any) {
+      const message = error.message || 'Failed to parse BeerXML';
+      if (message.includes('security') || message.includes('Malformed')) {
+        return res.status(400).json({ error: message });
+      }
+      return res.status(422).json({ error: message });
+    }
+  }
+);
+
+// BeerXML Import Confirm — saves the previewed recipe
+recipeRouter.post(
+  '/import/confirm',
+  auth,
+  [
+    body('recipe').isObject().withMessage('Recipe data is required'),
+    body('recipe.recipeName').trim().isLength({ min: 1, max: 100 }).withMessage('Recipe name is required'),
+  ],
+  validate([
+    body('recipe').isObject().withMessage('Recipe data is required'),
+    body('recipe.recipeName').trim().isLength({ min: 1, max: 100 }).withMessage('Recipe name is required'),
+  ]),
+  async (req: Request, res: Response) => {
+    try {
+      const userId = req.user!._id;
+      const { recipe: recipeData } = req.body;
+
+      const recipe = new Recipe({
+        userId,
+        recipeName: recipeData.recipeName,
+        style: recipeData.style,
+        styleCode: recipeData.styleCode,
+        method: recipeData.method || 'all_grain',
+        batchSize: recipeData.batchSize,
+        batchSizeUnit: recipeData.batchSizeUnit || 'L',
+        boilTimeMinutes: recipeData.boilTimeMinutes,
+        efficiency: recipeData.efficiency,
+        notes: recipeData.notes,
+        estimatedOg: recipeData.estimatedOg,
+        estimatedFg: recipeData.estimatedFg,
+      });
+
+      await recipe.save();
+
+      res.status(201).json({ recipe });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+// BeerXML Export endpoint
+recipeRouter.get('/:id/export', auth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!._id;
+
+    const recipe = await Recipe.findById(id).lean();
+
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const isOwner = recipe.userId.toString() === userId.toString();
+    const isPublic = recipe.isPublic;
+
+    if (!isOwner && !isPublic) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const xml = exportToBeerXML(recipe);
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.setHeader('Content-Disposition', `attachment; filename="${recipe.recipeName.replace(/[^a-zA-Z0-9]/g, '_')}.xml"`);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.status(200).send(xml);
   } catch (error) {
     throw error;
   }

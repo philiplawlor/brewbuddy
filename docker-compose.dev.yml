@@ -12,6 +12,9 @@ services:
     volumes:
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
+      - ./frontend/__tests__:/app/__tests__
+      - ./frontend/vitest.config.ts:/app/vitest.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
     env_file:
       - .env
     environment:
@@ -38,6 +41,7 @@ services:
       - "3001:3001"
     volumes:
       - ./backend/src:/app/src
+      - ./backend/__tests__:/app/__tests__
     env_file:
       - .env
     environment:

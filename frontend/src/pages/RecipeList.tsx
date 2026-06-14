@@ -143,16 +143,28 @@ export function RecipeList() {
                 {totalRecipes} recipe{totalRecipes !== 1 ? 's' : ''} total
               </p>
             </div>
-            <Link
-              to="/recipes/new"
-              className="text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center"
-              style={{ backgroundColor: 'var(--accent-primary)' }}
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Recipe
-            </Link>
+            <div className="flex gap-3">
+              <Link
+                to="/recipes/import"
+                className="card-theme font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import
+              </Link>
+              <Link
+                to="/recipes/new"
+                className="text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center"
+                style={{ backgroundColor: 'var(--accent-primary)' }}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Recipe
+              </Link>
+            </div>
           </div>
 
           {/* Filters */}

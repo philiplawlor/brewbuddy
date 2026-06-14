@@ -98,6 +98,25 @@ export function RecipeDetail() {
     }
   };
 
+  const handleExport = async () => {
+    if (!id || !recipe) return;
+    try {
+      const response = await recipeAPI.exportRecipe(id);
+      const blob = new Blob([response.data], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${recipe.recipeName.replace(/[^a-zA-Z0-9]/g, '_')}.xml`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to export recipe');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -226,6 +245,14 @@ export function RecipeDetail() {
                       style={!recipe.isPublic ? { color: 'var(--text-primary)' } : undefined}
                     >
                       {recipe.isPublic ? '🌍 Shared' : '🔗 Share'}
+                    </button>
+                    <button
+                      onClick={handleExport}
+                      className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
+                      style={{ color: 'var(--text-primary)' }}
+                      title="Export as BeerXML"
+                    >
+                      📥 Export
                     </button>
                     <button
                       onClick={() => setShowDeleteModal(true)}

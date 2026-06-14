@@ -86,6 +86,16 @@ export const recipeAPI = {
   
   deleteComment: (id: string, commentId: string) =>
     api.delete(`/recipes/${id}/comments/${commentId}`),
+
+  // BeerXML Import/Export
+  importRecipe: (xml: string) =>
+    api.post('/recipes/import', { xml }),
+
+  importRecipeConfirm: (recipe: Record<string, any>) =>
+    api.post('/recipes/import/confirm', { recipe }),
+
+  exportRecipe: (id: string) =>
+    api.get(`/recipes/${id}/export`, { responseType: 'text' }),
 };
 
 // Brew Session API

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RecipeDetail } from '../src/pages/RecipeDetail';
 import { recipeAPI } from '../src/services/api';
@@ -21,10 +21,13 @@ vi.mock('../src/context/AuthContext', () => ({
 }));
 
 const mockGetRecipeById = vi.fn();
+const mockExportRecipe = vi.fn();
 vi.mock('../src/services/api', () => ({
   recipeAPI: {
     getRecipeById: (...args: unknown[]) => mockGetRecipeById(...args),
     deleteRecipe: vi.fn(),
+    updateRecipe: vi.fn(),
+    exportRecipe: (...args: unknown[]) => mockExportRecipe(...args),
   },
 }));
 
@@ -335,5 +338,50 @@ describe('RecipeDetail Page', () => {
     const backLink = screen.getByText('Back to Recipes');
     const container = backLink.closest('div.max-w-4xl');
     expect(container).not.toBeNull();
+  });
+
+  it('shows export button for owner', async () => {
+    render(
+      <MemoryRouter initialEntries={['/recipes/1']}>
+        <Routes>
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Export as BeerXML')).toBeDefined();
+    });
+  });
+
+  it('calls exportRecipe when export button clicked', async () => {
+    mockExportRecipe.mockResolvedValue({
+      data: '<?xml version="1.0"?><RECIPES><RECIPE><NAME>American Pale Ale</NAME></RECIPE></RECIPES>',
+    });
+
+    // Mock URL.createObjectURL
+    const mockCreateObjectURL = vi.fn(() => 'blob:url');
+    const mockRevokeObjectURL = vi.fn();
+    Object.defineProperty(window.URL, 'createObjectURL', { value: mockCreateObjectURL, writable: true });
+    Object.defineProperty(window.URL, 'revokeObjectURL', { value: mockRevokeObjectURL, writable: true });
+
+    render(
+      <MemoryRouter initialEntries={['/recipes/1']}>
+        <Routes>
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTitle('Export as BeerXML')).toBeDefined();
+    });
+
+    const exportButton = screen.getByTitle('Export as BeerXML');
+    fireEvent.click(exportButton);
+
+    await waitFor(() => {
+      expect(mockExportRecipe).toHaveBeenCalledWith('1');
+    });
   });
 });

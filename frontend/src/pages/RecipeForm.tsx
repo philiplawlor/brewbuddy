@@ -15,6 +15,7 @@ interface FormData {
   boilTimeMinutes: number;
   efficiency: number;
   notes: string;
+  isPublic: boolean;
 }
 
 interface FormErrors {
@@ -32,6 +33,7 @@ const defaultFormData: FormData = {
   boilTimeMinutes: 60,
   efficiency: 75,
   notes: '',
+  isPublic: false,
 };
 
 const steps: { key: StepKey; label: string; icon: JSX.Element }[] = [
@@ -99,6 +101,7 @@ export function RecipeForm() {
         boilTimeMinutes: recipe.boilTimeMinutes || 60,
         efficiency: recipe.efficiency || 75,
         notes: recipe.notes || '',
+        isPublic: recipe.isPublic || false,
       });
     } catch {
       setApiError('Failed to load recipe');
