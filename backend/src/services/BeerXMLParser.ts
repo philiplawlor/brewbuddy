@@ -1,5 +1,5 @@
 import { parseStringPromise, Builder } from 'xml2js';
-import { IRecipe, IMashProfile, IMashStep } from '../types/recipe';
+import { IRecipe, IMashProfile, IMashStep, IStyleProfile, IEquipment, IInstruction, IMiscIngredient } from '../types/recipe';
 
 // BeerXML type mappings
 const METHOD_MAP: Record<string, IRecipe['method']> = {
@@ -52,6 +52,16 @@ export interface ParsedBeerXML {
     origin?: string;
     type?: string;
     notes?: string;
+    beta?: number;
+    hsi?: number;
+    humulene?: number;
+    caryophyllene?: number;
+    cohumulone?: number;
+    myrcene?: number;
+    substitutes?: string;
+    producer?: string;
+    productId?: string;
+    year?: string;
   }>;
   fermentables: Array<{
     name: string;
@@ -63,6 +73,12 @@ export interface ParsedBeerXML {
     supplier?: string;
     notes?: string;
     potentialExtract?: number;
+    coarseFineDiff?: number;
+    moisture?: number;
+    protein?: number;
+    maxInBatch?: number;
+    recommendMash?: boolean;
+    ibuGalPerLb?: number;
   }>;
   yeasts: Array<{
     name: string;
@@ -72,32 +88,38 @@ export interface ParsedBeerXML {
     laboratory?: string;
     productId?: string;
     attenuation?: number;
+    attenuationMin?: number;
+    attenuationMax?: number;
     minTemperature?: number;
     maxTemperature?: number;
     flocculation?: string;
     notes?: string;
+    timesCultured?: number;
+    maxReuse?: number;
+    addToSecondary?: boolean;
+    bestFor?: string;
   }>;
   mashProfile?: IMashProfile;
+  styleProfile?: IStyleProfile;
+  equipment?: IEquipment;
+  instructions?: IInstruction[];
+  miscIngredients?: IMiscIngredient[];
   brewer?: string;
-  styleCategory?: string;
-  styleLetter?: string;
-  styleGuide?: string;
-  styleNotes?: string;
-  ogMin?: number;
-  ogMax?: number;
-  fgMin?: number;
-  fgMax?: number;
-  ibuMin?: number;
-  ibuMax?: number;
-  colorMin?: number;
-  colorMax?: number;
-  abvMin?: number;
-  abvMax?: number;
+  asstBrewer?: string;
   carbonation?: number;
+  forcedCarbonation?: boolean;
+  primingSugarName?: string;
+  primingSugarEquiv?: number;
+  kegPrimingFactor?: number;
+  carbonationTemp?: number;
   primaryAgeDays?: number;
   primaryTemp?: number;
   secondaryAgeDays?: number;
   secondaryTemp?: number;
+  tertiaryAgeDays?: number;
+  tertiaryTemp?: number;
+  ageDays?: number;
+  ageTemp?: number;
 }
 
 // Sentinel's security config: disable external entity processing
@@ -148,6 +170,15 @@ export async function parseBeerXML(xmlString: string): Promise<ParsedBeerXML> {
 }
 
 /**
+ * Safely parse a float, returning undefined if the value is missing or unparseable.
+ */
+function safeFloat(val: any): number | undefined {
+  if (val === undefined || val === null || val === '') return undefined;
+  const n = parseFloat(val);
+  return isNaN(n) ? undefined : n;
+}
+
+/**
  * Map a parsed BeerXML recipe object to BrewBuddy format.
  */
 function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
@@ -159,65 +190,108 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
       ? `${recipe.style.category_number}${recipe.style.style_letter || ''}`
       : undefined,
     method: METHOD_MAP[recipe.type] || 'all_grain',
-    batchSize: parseFloat(recipe.batch_size) || undefined,
+    batchSize: safeFloat(recipe.batch_size),
     batchSizeUnit: 'L',
-    boilTimeMinutes: parseFloat(recipe.boil_time) || undefined,
-    efficiency: parseFloat(recipe.efficiency) || undefined,
-    notes: [recipe.notes, recipe.taste_notes].filter(Boolean).join('\n\n') || undefined,
-    estimatedOg: parseFloat(recipe.og) || undefined,
-    estimatedFg: parseFloat(recipe.fg) || undefined,
-    estimatedAbv: recipe.abv ? parseFloat(recipe.abv) : undefined,
-    estimatedIbu: recipe.ibu ? parseFloat(recipe.ibu) : undefined,
-    estimatedSrm: recipe.color ? parseFloat(recipe.color) : undefined,
-    tasteRating: recipe.taste_rating ? parseFloat(recipe.taste_rating) : undefined,
+    boilSize: safeFloat(recipe.boil_size),
+    preBoilSize: safeFloat(recipe.pre_boil_size),
+    boilTimeMinutes: safeFloat(recipe.boil_time),
+    efficiency: safeFloat(recipe.efficiency),
+    notes: recipe.notes || undefined,
+    tasteNotes: recipe.taste_notes || undefined,
+    tasteRating: safeFloat(recipe.taste_rating),
+    estimatedOg: safeFloat(recipe.og),
+    estimatedFg: safeFloat(recipe.fg),
+    estimatedAbv: safeFloat(recipe.abv),
+    estimatedIbu: safeFloat(recipe.ibu),
+    estimatedSrm: safeFloat(recipe.color),
+    brewer: recipe.brewer || undefined,
+    asstBrewer: recipe.asst_brewer || undefined,
+    brewDate: recipe.date ? new Date(recipe.date) : undefined,
+    carbonation: safeFloat(recipe.carbonation),
+    forcedCarbonation: recipe.forced_carbonation === 'true' || recipe.forced_carbonation === '1',
+    primingSugarName: recipe.priming_sugar_name || undefined,
+    primingSugarEquiv: safeFloat(recipe.priming_sugar_equiv),
+    kegPrimingFactor: safeFloat(recipe.keg_priming_factor),
+    carbonationTemp: safeFloat(recipe.carbonation_temp),
+    primaryAgeDays: safeFloat(recipe.primary_age),
+    primaryTemp: safeFloat(recipe.primary_temp),
+    secondaryAgeDays: safeFloat(recipe.secondary_age),
+    secondaryTemp: safeFloat(recipe.secondary_temp),
+    tertiaryAgeDays: safeFloat(recipe.tertiary_age),
+    tertiaryTemp: safeFloat(recipe.tertiary_temp),
+    ageDays: safeFloat(recipe.age),
+    ageTemp: safeFloat(recipe.age_temp),
   };
 
-  // Map hops with additional fields
+  // Map hops with all fields
   const hopsRaw = recipe.hops?.hop;
   const hops = hopsRaw
     ? (Array.isArray(hopsRaw) ? hopsRaw : [hopsRaw]).map((h: any) => ({
         name: h.name || 'Unknown Hop',
-        alpha: parseFloat(h.alpha) || undefined,
-        amount: parseFloat(h.amount) || undefined,
-        time: parseFloat(h.time) || undefined,
+        alpha: safeFloat(h.alpha),
+        amount: safeFloat(h.amount),
+        time: safeFloat(h.time),
         use: HOP_USE_MAP[h.use] || h.use || 'Boil',
         form: h.form || 'Pellet',
         origin: h.origin || undefined,
         type: h.type || undefined,
         notes: h.notes || undefined,
+        beta: safeFloat(h.beta),
+        hsi: safeFloat(h.hsi),
+        humulene: safeFloat(h.humulene),
+        caryophyllene: safeFloat(h.caryophyllene),
+        cohumulone: safeFloat(h.cohumulone),
+        myrcene: safeFloat(h.myrcene),
+        substitutes: h.substitutes || undefined,
+        producer: h.producer || undefined,
+        productId: h.product_id || undefined,
+        year: h.year || undefined,
       }))
     : [];
 
-  // Map fermentables with additional fields
+  // Map fermentables with all fields
   const fermRaw = recipe.fermentables?.fermentable;
   const fermentables = fermRaw
     ? (Array.isArray(fermRaw) ? fermRaw : [fermRaw]).map((f: any) => ({
         name: f.name || 'Unknown Grain',
-        amount: parseFloat(f.amount) || undefined,
-        yield: parseFloat(f.yield) || undefined,
-        color: parseFloat(f.color) || undefined,
+        amount: safeFloat(f.amount),
+        yield: safeFloat(f.yield),
+        color: safeFloat(f.color),
         type: f.type || 'Grain',
         origin: f.origin || undefined,
         supplier: f.supplier || undefined,
         notes: f.notes || undefined,
+        potentialExtract: safeFloat(f.potential),
+        coarseFineDiff: safeFloat(f.coarse_fine_diff),
+        moisture: safeFloat(f.moisture),
+        protein: safeFloat(f.protein),
+        maxInBatch: safeFloat(f.max_in_batch),
+        recommendMash: f.recommend_mash === 'true' || f.recommend_mash === '1',
+        ibuGalPerLb: safeFloat(f.ibu_gal_per_lb),
       }))
     : [];
 
-  // Map yeast with additional fields
+  // Map yeast with all fields
   const yeastRaw = recipe.yeasts?.yeast;
   const yeasts = yeastRaw
     ? (Array.isArray(yeastRaw) ? yeastRaw : [yeastRaw]).map((y: any) => ({
         name: y.name || 'Unknown Yeast',
         type: y.type || undefined,
         form: y.form || undefined,
-        amount: parseFloat(y.amount) || undefined,
+        amount: safeFloat(y.amount),
         laboratory: y.laboratory || undefined,
         productId: y.product_id || undefined,
-        attenuation: parseFloat(y.attenuation) || undefined,
-        minTemperature: parseFloat(y.min_temperature) || undefined,
-        maxTemperature: parseFloat(y.max_temperature) || undefined,
+        attenuation: safeFloat(y.attenuation),
+        attenuationMin: safeFloat(y.attenuation_min),
+        attenuationMax: safeFloat(y.attenuation_max),
+        minTemperature: safeFloat(y.min_temperature),
+        maxTemperature: safeFloat(y.max_temperature),
         flocculation: y.flocculation || undefined,
         notes: y.notes || undefined,
+        timesCultured: safeFloat(y.times_cultured),
+        maxReuse: safeFloat(y.max_reuse),
+        addToSecondary: y.add_to_secondary === 'true' || y.add_to_secondary === '1',
+        bestFor: y.best_for || undefined,
       }))
     : [];
 
@@ -228,21 +302,118 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
     const steps = (Array.isArray(stepsRaw) ? stepsRaw : [stepsRaw]).map((s: any) => ({
       name: s.name || 'Step',
       type: MASH_STEP_TYPE_MAP[s.type] || 'infusion',
-      infuseAmount: parseFloat(s.infuse_amount) || undefined,
-      stepTemp: parseFloat(s.step_temp) || undefined,
-      stepTime: parseFloat(s.step_time) || undefined,
-      rampTime: parseFloat(s.ramp_time) || undefined,
-      endTemp: parseFloat(s.end_temp) || undefined,
+      infuseAmount: safeFloat(s.infuse_amount),
+      stepTemp: safeFloat(s.step_temp),
+      stepTime: safeFloat(s.step_time),
+      rampTime: safeFloat(s.ramp_time),
+      endTemp: safeFloat(s.end_temp),
     }));
 
     mashProfile = {
       name: recipe.mash.name || 'Mash Profile',
-      grainTemp: parseFloat(recipe.mash.grain_temp) || undefined,
-      tunTemp: parseFloat(recipe.mash.tun_temp) || undefined,
-      spargeTemp: parseFloat(recipe.mash.sparge_temp) || undefined,
-      ph: parseFloat(recipe.mash.ph) || undefined,
+      grainTemp: safeFloat(recipe.mash.grain_temp),
+      tunTemp: safeFloat(recipe.mash.tun_temp),
+      spargeTemp: safeFloat(recipe.mash.sparge_temp),
+      ph: safeFloat(recipe.mash.ph),
       steps,
     };
+  }
+
+  // Map style profile (comprehensive style data)
+  let styleProfile: IStyleProfile | undefined;
+  if (recipe.style) {
+    const s = recipe.style;
+    styleProfile = {
+      categoryNumber: s.category_number || undefined,
+      category: s.category || undefined,
+      styleLetter: s.style_letter || undefined,
+      styleGuide: s.style_guide || undefined,
+      name: s.name || undefined,
+      version: s.version || undefined,
+      aroma: s.aroma || undefined,
+      appearance: s.appearance || undefined,
+      flavor: s.flavor || undefined,
+      mouthfeel: s.mouthfeel || undefined,
+      overallImpression: s.overall_impression || undefined,
+      profile: s.profile || undefined,
+      ingredients: s.ingredients || undefined,
+      examples: s.examples || undefined,
+      notes: s.notes || undefined,
+      ogMin: safeFloat(s.og_min),
+      ogMax: safeFloat(s.og_max),
+      fgMin: safeFloat(s.fg_min),
+      fgMax: safeFloat(s.fg_max),
+      ibuMin: safeFloat(s.ibu_min),
+      ibuMax: safeFloat(s.ibu_max),
+      colorMin: safeFloat(s.color_min),
+      colorMax: safeFloat(s.color_max),
+      abvMin: safeFloat(s.abv_min),
+      abvMax: safeFloat(s.abv_max),
+      carbonationMin: safeFloat(s.carbonation_min),
+      carbonationMax: safeFloat(s.carbonation_max),
+    };
+  }
+
+  // Map equipment profile
+  let equipment: IEquipment | undefined;
+  if (recipe.equipment) {
+    const e = recipe.equipment;
+    equipment = {
+      name: e.name || undefined,
+      tunVolume: safeFloat(e.tun_volume),
+      tunWeight: safeFloat(e.tun_weight),
+      tunSpecificHeat: safeFloat(e.tun_specific_heat),
+      mashTunVolume: safeFloat(e.mash_tun_volume),
+      mashTunWeight: safeFloat(e.mash_tun_weight),
+      mashTunSpecificHeat: safeFloat(e.mash_tun_specific_heat),
+      lauterTunVolume: safeFloat(e.lauter_tun_volume),
+      lauterTunWeight: safeFloat(e.lauter_tun_weight),
+      lauterTunSpecificHeat: safeFloat(e.lauter_tun_specific_heat),
+      boilKettleVolume: safeFloat(e.boil_kettle_volume),
+      boilKettleWeight: safeFloat(e.boil_kettle_weight),
+      boilKettleSpecificHeat: safeFloat(e.boil_kettle_specific_heat),
+      boilTime: safeFloat(e.boil_time),
+      lauterDeadSpace: safeFloat(e.lauter_dead_space),
+      topUpWater: safeFloat(e.top_up_water),
+      trubChillerLoss: safeFloat(e.trub_chiller_loss),
+      evapRate: safeFloat(e.evap_rate),
+      calculatedBoilSize: safeFloat(e.calculated_boil_size),
+      calculatedBatchSize: safeFloat(e.calculated_batch_size),
+      equipmentLoss: safeFloat(e.equipment_loss),
+      whirlpoolTime: safeFloat(e.whirlpool_time),
+      whirlpoolTemp: safeFloat(e.whirlpool_temp),
+    };
+  }
+
+  // Map instructions
+  let instructions: IInstruction[] | undefined;
+  if (recipe.instructions?.instruction) {
+    const instrRaw = recipe.instructions.instruction;
+    const instrArr = Array.isArray(instrRaw) ? instrRaw : [instrRaw];
+    instructions = instrArr.map((i: any) => ({
+      name: i.name || undefined,
+      amount: safeFloat(i.amount),
+      amountIsWeight: i.amount_is_weight === 'true' || i.amount_is_weight === '1',
+      time: safeFloat(i.time),
+      step: safeFloat(i.step),
+    }));
+  }
+
+  // Map misc ingredients
+  let miscIngredients: IMiscIngredient[] | undefined;
+  if (recipe.miscs?.misc) {
+    const miscRaw = recipe.miscs.misc;
+    const miscArr = Array.isArray(miscRaw) ? miscRaw : [miscRaw];
+    miscIngredients = miscArr.map((m: any) => ({
+      name: m.name || 'Unknown Misc',
+      type: m.type || undefined,
+      amount: safeFloat(m.amount),
+      amountIsWeight: m.amount_is_weight === 'true' || m.amount_is_weight === '1',
+      useFor: m.use_for || undefined,
+      use: m.use || undefined,
+      time: safeFloat(m.time),
+      notes: m.notes || undefined,
+    }));
   }
 
   return {
@@ -251,26 +422,26 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
     fermentables,
     yeasts,
     mashProfile,
+    styleProfile,
+    equipment,
+    instructions,
+    miscIngredients,
     brewer: recipe.brewer || undefined,
-    styleCategory: recipe.style?.category || undefined,
-    styleLetter: recipe.style?.style_letter || undefined,
-    styleGuide: recipe.style?.style_guide || undefined,
-    styleNotes: recipe.style?.notes || undefined,
-    ogMin: recipe.style?.og_min ? parseFloat(recipe.style.og_min) : undefined,
-    ogMax: recipe.style?.og_max ? parseFloat(recipe.style.og_max) : undefined,
-    fgMin: recipe.style?.fg_min ? parseFloat(recipe.style.fg_min) : undefined,
-    fgMax: recipe.style?.fg_max ? parseFloat(recipe.style.fg_max) : undefined,
-    ibuMin: recipe.style?.ibu_min ? parseFloat(recipe.style.ibu_min) : undefined,
-    ibuMax: recipe.style?.ibu_max ? parseFloat(recipe.style.ibu_max) : undefined,
-    colorMin: recipe.style?.color_min ? parseFloat(recipe.style.color_min) : undefined,
-    colorMax: recipe.style?.color_max ? parseFloat(recipe.style.color_max) : undefined,
-    abvMin: recipe.style?.abv_min ? parseFloat(recipe.style.abv_min) : undefined,
-    abvMax: recipe.style?.abv_max ? parseFloat(recipe.style.abv_max) : undefined,
-    carbonation: recipe.carbonation ? parseFloat(recipe.carbonation) : undefined,
-    primaryAgeDays: recipe.primary_age ? parseFloat(recipe.primary_age) : undefined,
-    primaryTemp: recipe.primary_temp ? parseFloat(recipe.primary_temp) : undefined,
-    secondaryAgeDays: recipe.secondary_age ? parseFloat(recipe.secondary_age) : undefined,
-    secondaryTemp: recipe.secondary_temp ? parseFloat(recipe.secondary_temp) : undefined,
+    asstBrewer: recipe.asst_brewer || undefined,
+    carbonation: safeFloat(recipe.carbonation),
+    forcedCarbonation: recipe.forced_carbonation === 'true' || recipe.forced_carbonation === '1',
+    primingSugarName: recipe.priming_sugar_name || undefined,
+    primingSugarEquiv: safeFloat(recipe.priming_sugar_equiv),
+    kegPrimingFactor: safeFloat(recipe.keg_priming_factor),
+    carbonationTemp: safeFloat(recipe.carbonation_temp),
+    primaryAgeDays: safeFloat(recipe.primary_age),
+    primaryTemp: safeFloat(recipe.primary_temp),
+    secondaryAgeDays: safeFloat(recipe.secondary_age),
+    secondaryTemp: safeFloat(recipe.secondary_temp),
+    tertiaryAgeDays: safeFloat(recipe.tertiary_age),
+    tertiaryTemp: safeFloat(recipe.tertiary_temp),
+    ageDays: safeFloat(recipe.age),
+    ageTemp: safeFloat(recipe.age_temp),
   };
 }
 
@@ -293,9 +464,9 @@ export function exportToBeerXML(recipe: IRecipe): string {
         NAME: recipe.style || '',
         VERSION: 1,
       },
-      BREWER: 'BrewBuddy User',
+      BREWER: recipe.brewer || 'BrewBuddy User',
       BATCH_SIZE: recipe.batchSize || 0,
-      BOIL_SIZE: recipe.batchSize ? recipe.batchSize * 1.25 : 0, // estimate boil size
+      BOIL_SIZE: recipe.boilSize || (recipe.batchSize ? recipe.batchSize * 1.25 : 0),
       BOIL_TIME: recipe.boilTimeMinutes || 0,
       EFFICIENCY: recipe.efficiency || 0,
       NOTES: recipe.notes || '',
@@ -304,12 +475,58 @@ export function exportToBeerXML(recipe: IRecipe): string {
     },
   };
 
+  // Add optional recipe fields
+  if (recipe.asstBrewer) beerXmlRecipe.RECIPE.ASST_BREWER = recipe.asstBrewer;
+  if (recipe.brewDate) beerXmlRecipe.RECIPE.DATE = recipe.brewDate.toISOString().split('T')[0];
+  if (recipe.tasteNotes) beerXmlRecipe.RECIPE.TASTE_NOTES = recipe.tasteNotes;
+  if (recipe.tasteRating) beerXmlRecipe.RECIPE.TASTE_RATING = recipe.tasteRating;
+
   // Add estimated stats if present
   if (recipe.estimatedIbu) {
     beerXmlRecipe.RECIPE.ESTIMATED_IBU = recipe.estimatedIbu;
   }
   if (recipe.estimatedSrm) {
     beerXmlRecipe.RECIPE.ESTIMATED_SRM = recipe.estimatedSrm;
+  }
+  if (recipe.estimatedAbv) {
+    beerXmlRecipe.RECIPE.ABV = recipe.estimatedAbv;
+  }
+
+  // Add fermentation data
+  if (recipe.primaryAgeDays) beerXmlRecipe.RECIPE.PRIMARY_AGE = recipe.primaryAgeDays;
+  if (recipe.primaryTemp) beerXmlRecipe.RECIPE.PRIMARY_TEMP = recipe.primaryTemp;
+  if (recipe.secondaryAgeDays) beerXmlRecipe.RECIPE.SECONDARY_AGE = recipe.secondaryAgeDays;
+  if (recipe.secondaryTemp) beerXmlRecipe.RECIPE.SECONDARY_TEMP = recipe.secondaryTemp;
+  if (recipe.carbonation) beerXmlRecipe.RECIPE.CARBONATION = recipe.carbonation;
+
+  // Add style profile
+  if (recipe.styleProfile) {
+    const sp = recipe.styleProfile;
+    beerXmlRecipe.RECIPE.STYLE = {
+      ...beerXmlRecipe.RECIPE.STYLE,
+      CATEGORY_NUMBER: sp.categoryNumber || '',
+      STYLE_LETTER: sp.styleLetter || '',
+      STYLE_GUIDE: sp.styleGuide || '',
+      NOTES: sp.notes || '',
+      PROFILE: sp.profile || '',
+      INGREDIENTS: sp.ingredients || '',
+      EXAMPLES: sp.examples || '',
+      AROMA: sp.aroma || '',
+      APPEARANCE: sp.appearance || '',
+      FLAVOR: sp.flavor || '',
+      MOUTHFEEL: sp.mouthfeel || '',
+      OVERALL_IMPRESSION: sp.overallImpression || '',
+      OG_MIN: sp.ogMin || 0,
+      OG_MAX: sp.ogMax || 0,
+      FG_MIN: sp.fgMin || 0,
+      FG_MAX: sp.fgMax || 0,
+      IBU_MIN: sp.ibuMin || 0,
+      IBU_MAX: sp.ibuMax || 0,
+      COLOR_MIN: sp.colorMin || 0,
+      COLOR_MAX: sp.colorMax || 0,
+      ABV_MIN: sp.abvMin || 0,
+      ABV_MAX: sp.abvMax || 0,
+    };
   }
 
   // Add mash profile if present

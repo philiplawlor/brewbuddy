@@ -45,6 +45,8 @@ export interface Recipe {
   method?: 'all_grain' | 'partial_mash' | 'extract' | 'biab';
   batchSize?: number;
   batchSizeUnit?: 'L' | 'gal' | 'bbl';
+  boilSize?: number;
+  preBoilSize?: number;
   boilTimeMinutes?: number;
   efficiency?: number;
   estimatedOg?: number;
@@ -54,10 +56,122 @@ export interface Recipe {
   estimatedSrm?: number;
   estimatedCalories?: number;
   notes?: string;
+  tasteNotes?: string;
+  tasteRating?: number;
   isPublic?: boolean;
   isArchived?: boolean;
+
+  brewer?: string;
+  asstBrewer?: string;
+  brewDate?: string;
+
+  carbonation?: number;
+  forcedCarbonation?: boolean;
+  primingSugarName?: string;
+  primingSugarEquiv?: number;
+  kegPrimingFactor?: number;
+  carbonationTemp?: number;
+  primaryAgeDays?: number;
+  primaryTemp?: number;
+  secondaryAgeDays?: number;
+  secondaryTemp?: number;
+  tertiaryAgeDays?: number;
+  tertiaryTemp?: number;
+  ageDays?: number;
+  ageTemp?: number;
+
+  styleProfile?: StyleProfile;
+  equipment?: Equipment;
+  instructions?: Instruction[];
+  miscIngredients?: MiscIngredient[];
+
+  mashProfile?: {
+    name?: string;
+    grainTemp?: number;
+    tunTemp?: number;
+    spargeTemp?: number;
+    ph?: number;
+    steps: Array<{
+      name: string;
+      type: string;
+      infuseAmount?: number;
+      stepTemp?: number;
+      stepTime?: number;
+      rampTime?: number;
+      endTemp?: number;
+    }>;
+  };
+
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface StyleProfile {
+  categoryNumber?: string;
+  category?: string;
+  styleLetter?: string;
+  styleGuide?: string;
+  name?: string;
+  aroma?: string;
+  appearance?: string;
+  flavor?: string;
+  mouthfeel?: string;
+  overallImpression?: string;
+  profile?: string;
+  ingredients?: string;
+  examples?: string;
+  notes?: string;
+  ogMin?: number;
+  ogMax?: number;
+  fgMin?: number;
+  fgMax?: number;
+  ibuMin?: number;
+  ibuMax?: number;
+  colorMin?: number;
+  colorMax?: number;
+  abvMin?: number;
+  abvMax?: number;
+  carbonationMin?: number;
+  carbonationMax?: number;
+}
+
+export interface Equipment {
+  name?: string;
+  tunVolume?: number;
+  tunWeight?: number;
+  tunSpecificHeat?: number;
+  mashTunVolume?: number;
+  lauterTunVolume?: number;
+  boilKettleVolume?: number;
+  boilTime?: number;
+  lauterDeadSpace?: number;
+  topUpWater?: number;
+  trubChillerLoss?: number;
+  evapRate?: number;
+  calculatedBoilSize?: number;
+  calculatedBatchSize?: number;
+  equipmentLoss?: number;
+  whirlpoolTime?: number;
+  whirlpoolTemp?: number;
+}
+
+export interface Instruction {
+  name?: string;
+  amount?: number;
+  amountIsWeight?: boolean;
+  time?: number;
+  step?: number;
+}
+
+export interface MiscIngredient {
+  name: string;
+  type?: string;
+  amount?: number;
+  amountIsWeight?: boolean;
+  useFor?: string;
+  use?: string;
+  time?: number;
+  notes?: string;
 }
 
 export interface RecipeIngredient {

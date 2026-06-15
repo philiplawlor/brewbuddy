@@ -47,6 +47,93 @@ const fermentationProfileSchema = new Schema(
   { _id: false }
 );
 
+const styleProfileSchema = new Schema(
+  {
+    categoryNumber: { type: String, trim: true },
+    category: { type: String, trim: true },
+    styleLetter: { type: String, trim: true },
+    styleGuide: { type: String, trim: true },
+    name: { type: String, trim: true },
+    version: { type: String, trim: true },
+    aroma: { type: String, trim: true },
+    appearance: { type: String, trim: true },
+    flavor: { type: String, trim: true },
+    mouthfeel: { type: String, trim: true },
+    overallImpression: { type: String, trim: true },
+    profile: { type: String, trim: true },
+    ingredients: { type: String, trim: true },
+    examples: { type: String, trim: true },
+    notes: { type: String, trim: true },
+    ogMin: { type: Number },
+    ogMax: { type: Number },
+    fgMin: { type: Number },
+    fgMax: { type: Number },
+    ibuMin: { type: Number },
+    ibuMax: { type: Number },
+    colorMin: { type: Number },
+    colorMax: { type: Number },
+    abvMin: { type: Number },
+    abvMax: { type: Number },
+    carbonationMin: { type: Number },
+    carbonationMax: { type: Number },
+  },
+  { _id: false }
+);
+
+const equipmentSchema = new Schema(
+  {
+    name: { type: String, trim: true },
+    tunVolume: { type: Number },
+    tunWeight: { type: Number },
+    tunSpecificHeat: { type: Number },
+    mashTunVolume: { type: Number },
+    mashTunWeight: { type: Number },
+    mashTunSpecificHeat: { type: Number },
+    lauterTunVolume: { type: Number },
+    lauterTunWeight: { type: Number },
+    lauterTunSpecificHeat: { type: Number },
+    boilKettleVolume: { type: Number },
+    boilKettleWeight: { type: Number },
+    boilKettleSpecificHeat: { type: Number },
+    boilTime: { type: Number },
+    lauterDeadSpace: { type: Number },
+    topUpWater: { type: Number },
+    trubChillerLoss: { type: Number },
+    evapRate: { type: Number },
+    calculatedBoilSize: { type: Number },
+    calculatedBatchSize: { type: Number },
+    equipmentLoss: { type: Number },
+    whirlpoolTime: { type: Number },
+    whirlpoolTemp: { type: Number },
+  },
+  { _id: false }
+);
+
+const instructionSchema = new Schema(
+  {
+    name: { type: String, trim: true },
+    amount: { type: Number },
+    amountIsWeight: { type: Boolean },
+    time: { type: Number },
+    step: { type: Number },
+  },
+  { _id: false }
+);
+
+const miscIngredientSchema = new Schema(
+  {
+    name: { type: String, trim: true },
+    type: { type: String, trim: true },
+    amount: { type: Number },
+    amountIsWeight: { type: Boolean },
+    useFor: { type: String, trim: true },
+    use: { type: String, trim: true },
+    time: { type: Number },
+    notes: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
 const recipeSchema = new Schema<RecipeDocument>(
   {
     userId: {
@@ -104,6 +191,8 @@ const recipeSchema = new Schema<RecipeDocument>(
       enum: ['L', 'gal', 'bbl'],
       default: 'L',
     },
+    boilSize: { type: Number },
+    preBoilSize: { type: Number },
     boilTimeMinutes: {
       type: Number,
       min: [0, 'Boil time cannot be negative'],
@@ -138,8 +227,31 @@ const recipeSchema = new Schema<RecipeDocument>(
     averageRating: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
 
+    brewer: { type: String, trim: true },
+    asstBrewer: { type: String, trim: true },
+    brewDate: { type: Date },
+
     mashProfile: { type: mashProfileSchema },
     fermentationProfile: { type: fermentationProfileSchema },
+    styleProfile: { type: styleProfileSchema },
+    equipment: { type: equipmentSchema },
+    instructions: [instructionSchema],
+    miscIngredients: [miscIngredientSchema],
+
+    carbonation: { type: Number },
+    forcedCarbonation: { type: Boolean },
+    primingSugarName: { type: String, trim: true },
+    primingSugarEquiv: { type: Number },
+    kegPrimingFactor: { type: Number },
+    carbonationTemp: { type: Number },
+    primaryAgeDays: { type: Number },
+    primaryTemp: { type: Number },
+    secondaryAgeDays: { type: Number },
+    secondaryTemp: { type: Number },
+    tertiaryAgeDays: { type: Number },
+    tertiaryTemp: { type: Number },
+    ageDays: { type: Number },
+    ageTemp: { type: Number },
   },
   {
     timestamps: true,

@@ -12,7 +12,7 @@ const methodLabels: Record<string, string> = {
   biab: 'BIAB',
 };
 
-type TabKey = 'ingredients' | 'instructions' | 'notes';
+type TabKey = 'ingredients' | 'brewday' | 'style' | 'notes';
 
 export function RecipeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -163,11 +163,20 @@ export function RecipeDetail() {
       ),
     },
     {
-      key: 'instructions',
-      label: 'Instructions',
+      key: 'brewday',
+      label: 'Brew Day',
       icon: (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'style',
+      label: 'Style',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
     },
@@ -181,6 +190,17 @@ export function RecipeDetail() {
       ),
     },
   ];
+
+  // Helper to render style section
+  const renderStyleSection = (label: string, content?: string) => {
+    if (!content) return null;
+    return (
+      <div className="mb-4">
+        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--accent-primary)' }}>{label}</h4>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{content}</p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen pt-20 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -212,11 +232,23 @@ export function RecipeDetail() {
                       {recipe.style}
                     </p>
                   )}
-                  {recipe.method && (
-                    <span className="inline-block mt-2 text-xs font-medium px-3 py-1 rounded-full tag-theme">
-                      {methodLabels[recipe.method] || recipe.method}
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {recipe.method && (
+                      <span className="text-xs font-medium px-3 py-1 rounded-full tag-theme">
+                        {methodLabels[recipe.method] || recipe.method}
+                      </span>
+                    )}
+                    {recipe.brewer && (
+                      <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                        Brewed by {recipe.brewer}
+                      </span>
+                    )}
+                    {recipe.brewDate && (
+                      <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                        {new Date(recipe.brewDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {isOwner && (
@@ -338,6 +370,7 @@ export function RecipeDetail() {
 
             {/* Tab Content */}
             <div className="p-6">
+              {/* INGREDIENTS TAB */}
               {activeTab === 'ingredients' && (
                 <div>
                   <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Ingredients</h2>
@@ -349,48 +382,220 @@ export function RecipeDetail() {
                 </div>
               )}
 
-              {activeTab === 'instructions' && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brewing Instructions</h2>
-                  <div className="space-y-4">
-                    {recipe.method && (
-                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                        <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Brewing Method</h3>
-                        <p style={{ color: 'var(--text-secondary)' }}>
-                          {methodLabels[recipe.method] || recipe.method}
-                        </p>
-                      </div>
-                    )}
+              {/* BREW DAY TAB */}
+              {activeTab === 'brewday' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brew Day</h2>
+
+                  {/* Mash Profile */}
+                  {recipe.mashProfile && recipe.mashProfile.steps && recipe.mashProfile.steps.length > 0 && (
                     <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Batch Parameters</h3>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>Batch Size:</span>{' '}
-                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.batchSize ? `${recipe.batchSize} ${recipe.batchSizeUnit || 'L'}` : '—'}</span>
-                        </div>
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>Boil Time:</span>{' '}
-                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.boilTimeMinutes ? `${recipe.boilTimeMinutes} minutes` : '—'}</span>
-                        </div>
-                        <div>
-                          <span style={{ color: 'var(--text-muted)' }}>Efficiency:</span>{' '}
-                          <span style={{ color: 'var(--text-secondary)' }}>{recipe.efficiency ? `${recipe.efficiency}%` : '—'}</span>
-                        </div>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>
+                        {recipe.mashProfile.name || 'Mash Profile'}
+                      </h3>
+                      {recipe.mashProfile.grainTemp && (
+                        <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Grain Temp: {recipe.mashProfile.grainTemp}°C</p>
+                      )}
+                      <div className="space-y-2">
+                        {recipe.mashProfile.steps.map((step, i) => (
+                          <div key={i} className="flex items-center gap-3 text-sm">
+                            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}>
+                              {i + 1}
+                            </span>
+                            <div className="flex-1">
+                              <span style={{ color: 'var(--text-primary)' }}>{step.name}</span>
+                              <span className="ml-2 text-xs capitalize" style={{ color: 'var(--text-muted)' }}>({step.type})</span>
+                            </div>
+                            <div className="text-right text-xs" style={{ color: 'var(--text-secondary)' }}>
+                              {step.stepTemp && <span>{step.stepTemp}°C</span>}
+                              {step.stepTime && <span className="ml-2">({step.stepTime} min)</span>}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Equipment */}
+                  {recipe.equipment && recipe.equipment.name && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Equipment</h3>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-primary)' }}>{recipe.equipment.name}</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.equipment.tunVolume && <span>Mash Tun: {recipe.equipment.tunVolume} L</span>}
+                        {recipe.equipment.boilKettleVolume && <span>Boil Kettle: {recipe.equipment.boilKettleVolume} L</span>}
+                        {recipe.equipment.evapRate && <span>Evap Rate: {recipe.equipment.evapRate} L/hr</span>}
+                        {recipe.equipment.lauterDeadSpace && <span>Dead Space: {recipe.equipment.lauterDeadSpace} L</span>}
+                        {recipe.equipment.topUpWater && <span>Top Up Water: {recipe.equipment.topUpWater} L</span>}
+                        {recipe.equipment.trubChillerLoss && <span>Trub/Chiller Loss: {recipe.equipment.trubChillerLoss} L</span>}
+                        {recipe.equipment.whirlpoolTime && <span>Whirlpool: {recipe.equipment.whirlpoolTime} min</span>}
+                        {recipe.equipment.whirlpoolTemp && <span>Whirlpool Temp: {recipe.equipment.whirlpoolTemp}°C</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fermentation */}
+                  {(recipe.primaryAgeDays || recipe.primaryTemp || recipe.secondaryAgeDays || recipe.secondaryTemp || recipe.carbonation) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Fermentation</h3>
+                      <div className="grid grid-cols-2 gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.primaryAgeDays && <span>Primary: {recipe.primaryAgeDays} days</span>}
+                        {recipe.primaryTemp && <span>Primary Temp: {recipe.primaryTemp}°C</span>}
+                        {recipe.secondaryAgeDays && <span>Secondary: {recipe.secondaryAgeDays} days</span>}
+                        {recipe.secondaryTemp && <span>Secondary Temp: {recipe.secondaryTemp}°C</span>}
+                        {recipe.tertiaryAgeDays && <span>Tertiary: {recipe.tertiaryAgeDays} days</span>}
+                        {recipe.tertiaryTemp && <span>Tertiary Temp: {recipe.tertiaryTemp}°C</span>}
+                        {recipe.carbonation && <span>Carbonation: {recipe.carbonation} volumes</span>}
+                        {recipe.carbonationTemp && <span>Carbonation Temp: {recipe.carbonationTemp}°C</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  {recipe.instructions && recipe.instructions.length > 0 && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Instructions ({recipe.instructions.length} steps)</h3>
+                      <ol className="space-y-2 list-decimal list-inside text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.instructions.map((inst, i) => (
+                          <li key={i}>
+                            <span style={{ color: 'var(--text-primary)' }}>{inst.name || `Step ${i + 1}`}</span>
+                            {inst.time && <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>({inst.time} min)</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* Misc Ingredients */}
+                  {recipe.miscIngredients && recipe.miscIngredients.length > 0 && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Other Ingredients</h3>
+                      <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.miscIngredients.map((m, i) => (
+                          <li key={i}>
+                            <span style={{ color: 'var(--text-primary)' }}>{m.name}</span>
+                            {m.amount && <span> — {m.amount}{m.amountIsWeight ? 'g' : 'mL'}</span>}
+                            {m.use && <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>({m.use})</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {!recipe.mashProfile && !recipe.equipment && !recipe.instructions && !recipe.miscIngredients && !(recipe.primaryAgeDays || recipe.primaryTemp) && (
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No brew day data available.</p>
+                  )}
                 </div>
               )}
 
-              {activeTab === 'notes' && (
-                <div>
-                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brewer Notes</h2>
-                  {recipe.notes ? (
-                    <div className="rounded-lg p-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
-                      <p className="whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{recipe.notes}</p>
+              {/* STYLE TAB */}
+              {activeTab === 'style' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Style Information</h2>
+
+                  {recipe.styleProfile ? (
+                    <div className="space-y-4">
+                      {/* Style Header */}
+                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                          {recipe.styleProfile.name || recipe.style}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {recipe.styleProfile.category && <span>Category: {recipe.styleProfile.category}</span>}
+                          {recipe.styleProfile.styleLetter && <span>• {recipe.styleProfile.styleLetter}</span>}
+                          {recipe.styleProfile.styleGuide && <span>• {recipe.styleProfile.styleGuide}</span>}
+                        </div>
+                      </div>
+
+                      {/* Style Ranges */}
+                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>BJCP Ranges</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {recipe.styleProfile.ogMin && recipe.styleProfile.ogMax && (
+                            <span>OG: {recipe.styleProfile.ogMin.toFixed(3)} – {recipe.styleProfile.ogMax.toFixed(3)}</span>
+                          )}
+                          {recipe.styleProfile.fgMin && recipe.styleProfile.fgMax && (
+                            <span>FG: {recipe.styleProfile.fgMin.toFixed(3)} – {recipe.styleProfile.fgMax.toFixed(3)}</span>
+                          )}
+                          {recipe.styleProfile.ibuMin && recipe.styleProfile.ibuMax && (
+                            <span>IBU: {recipe.styleProfile.ibuMin} – {recipe.styleProfile.ibuMax}</span>
+                          )}
+                          {recipe.styleProfile.colorMin && recipe.styleProfile.colorMax && (
+                            <span>SRM: {recipe.styleProfile.colorMin} – {recipe.styleProfile.colorMax}</span>
+                          )}
+                          {recipe.styleProfile.abvMin && recipe.styleProfile.abvMax && (
+                            <span>ABV: {recipe.styleProfile.abvMin}% – {recipe.styleProfile.abvMax}%</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Style Description Sections */}
+                      {renderStyleSection('Aroma', recipe.styleProfile.aroma)}
+                      {renderStyleSection('Appearance', recipe.styleProfile.appearance)}
+                      {renderStyleSection('Flavor', recipe.styleProfile.flavor)}
+                      {renderStyleSection('Mouthfeel', recipe.styleProfile.mouthfeel)}
+                      {renderStyleSection('Overall Impression', recipe.styleProfile.overallImpression)}
+                      {renderStyleSection('Profile', recipe.styleProfile.profile)}
+                      {renderStyleSection('Ingredients', recipe.styleProfile.ingredients)}
+                      {renderStyleSection('Commercial Examples', recipe.styleProfile.examples)}
+                      {renderStyleSection('Notes', recipe.styleProfile.notes)}
                     </div>
                   ) : (
-                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No notes added yet.</p>
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No style profile data available.</p>
+                  )}
+                </div>
+              )}
+
+              {/* NOTES TAB */}
+              {activeTab === 'notes' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Notes</h2>
+
+                  {/* Brewer Info */}
+                  {(recipe.brewer || recipe.asstBrewer || recipe.brewDate) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Brewer</h3>
+                      <div className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.brewer && <p>Head Brewer: {recipe.brewer}</p>}
+                        {recipe.asstBrewer && <p>Assistant Brewer: {recipe.asstBrewer}</p>}
+                        {recipe.brewDate && <p>Brew Date: {new Date(recipe.brewDate).toLocaleDateString()}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recipe Notes */}
+                  <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Recipe Notes</h3>
+                    {recipe.notes ? (
+                      <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--text-secondary)' }}>{recipe.notes}</p>
+                    ) : (
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No recipe notes.</p>
+                    )}
+                  </div>
+
+                  {/* Taste Notes */}
+                  <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Taste Notes</h3>
+                    {recipe.tasteNotes ? (
+                      <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--text-secondary)' }}>{recipe.tasteNotes}</p>
+                    ) : (
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No taste notes.</p>
+                    )}
+                    {recipe.tasteRating && (
+                      <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Taste Rating: {recipe.tasteRating}/50</p>
+                    )}
+                  </div>
+
+                  {/* Carbonation */}
+                  {(recipe.carbonation || recipe.primingSugarName) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Carbonation</h3>
+                      <div className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.carbonation && <p>Target: {recipe.carbonation} volumes CO₂</p>}
+                        {recipe.primingSugarName && <p>Priming Sugar: {recipe.primingSugarName}</p>}
+                        {recipe.forcedCarbonation && <p>Method: Force Carbonated</p>}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

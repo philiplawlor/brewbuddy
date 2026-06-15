@@ -103,7 +103,7 @@ describe('ImportRecipe Page', () => {
     fireEvent.change(fileInput, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(screen.getByText(/Please select a \.xml or \.beerxml file/)).toBeTruthy();
+      expect(screen.getByText(/Please select a \.xml, \.beerxml, or \.qbrew file/)).toBeTruthy();
     });
   });
 

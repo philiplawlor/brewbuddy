@@ -4,14 +4,18 @@ import { recipeAPI } from '../services/api';
 
 interface ParsedRecipe {
   recipe: Record<string, any>;
-  hops: Array<{ name: string; alpha?: number; amount?: number; time?: number; use?: string; form?: string }>;
-  fermentables: Array<{ name: string; amount?: number; yield?: number; color?: number; type?: string }>;
+  hops: Array<{ name: string; alpha?: number; amount?: number; time?: number; use?: string; form?: string; origin?: string; notes?: string }>;
+  fermentables: Array<{ name: string; amount?: number; yield?: number; color?: number; type?: string; origin?: string; supplier?: string }>;
   yeasts: Array<{ name: string; type?: string; form?: string; amount?: number; laboratory?: string; productId?: string; attenuation?: number }>;
   mashProfile?: {
     name?: string;
     grainTemp?: number;
     steps: Array<{ name: string; type: string; stepTemp?: number; stepTime?: number }>;
   };
+  styleProfile?: Record<string, any>;
+  equipment?: Record<string, any>;
+  instructions?: Array<Record<string, any>>;
+  miscIngredients?: Array<Record<string, any>>;
 }
 
 export function ImportRecipe() {
@@ -32,8 +36,8 @@ export function ImportRecipe() {
       return;
     }
 
-    if (!file.name.endsWith('.xml') && !file.name.endsWith('.beerxml')) {
-      setError('Please select a .xml or .beerxml file.');
+    if (!file.name.endsWith('.xml') && !file.name.endsWith('.beerxml') && !file.name.endsWith('.qbrew')) {
+      setError('Please select a .xml, .beerxml, or .qbrew file.');
       return;
     }
 
@@ -63,6 +67,11 @@ export function ImportRecipe() {
         hops: parsed.hops,
         fermentables: parsed.fermentables,
         yeasts: parsed.yeasts,
+        mashProfile: parsed.mashProfile,
+        styleProfile: parsed.styleProfile,
+        equipment: parsed.equipment,
+        instructions: parsed.instructions,
+        miscIngredients: parsed.miscIngredients,
       });
       navigate(`/recipes/${response.data.recipe._id}`);
     } catch (err: any) {
@@ -131,7 +140,7 @@ export function ImportRecipe() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".xml,.beerxml"
+              accept=".xml,.beerxml,.qbrew"
               onChange={handleFileInput}
               className="hidden"
             />
@@ -256,6 +265,117 @@ export function ImportRecipe() {
                 <div className="mt-4 pt-4 border-t border-default/30">
                   <p className="text-xs text-muted uppercase tracking-wider mb-1">Notes</p>
                   <p className="text-sm text-primary/80 whitespace-pre-wrap">{parsed.recipe.notes}</p>
+                </div>
+              )}
+
+              {/* Brewer */}
+              {parsed.recipe.brewer && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Brewer</p>
+                  <p className="text-sm text-primary/80">{parsed.recipe.brewer}</p>
+                </div>
+              )}
+
+              {/* Taste Notes */}
+              {parsed.recipe.tasteNotes && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Taste Notes</p>
+                  <p className="text-sm text-primary/80 whitespace-pre-wrap">{parsed.recipe.tasteNotes}</p>
+                </div>
+              )}
+
+              {/* Style Profile */}
+              {parsed.styleProfile && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-2">Style Profile</p>
+                  <div className="space-y-2">
+                    {parsed.styleProfile.aroma && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Aroma</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.aroma}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.appearance && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Appearance</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.appearance}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.flavor && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Flavor</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.flavor}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.mouthfeel && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Mouthfeel</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.mouthfeel}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.overallImpression && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Overall Impression</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.overallImpression}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.profile && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Profile</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.profile}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.ingredients && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Ingredients</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.ingredients}</p>
+                      </div>
+                    )}
+                    {parsed.styleProfile.examples && (
+                      <div>
+                        <p className="text-xs font-medium text-accent-primary">Examples</p>
+                        <p className="text-sm text-primary/80">{parsed.styleProfile.examples}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Equipment */}
+              {parsed.equipment && parsed.equipment.name && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Equipment</p>
+                  <p className="text-sm text-primary/80">{parsed.equipment.name}</p>
+                  <div className="grid grid-cols-2 gap-2 mt-2 text-xs text-primary/60">
+                    {parsed.equipment.tunVolume && <span>Tun Volume: {parsed.equipment.tunVolume} L</span>}
+                    {parsed.equipment.boilKettleVolume && <span>Boil Kettle: {parsed.equipment.boilKettleVolume} L</span>}
+                    {parsed.equipment.evapRate && <span>Evap Rate: {parsed.equipment.evapRate} L/hr</span>}
+                    {parsed.equipment.lauterDeadSpace && <span>Dead Space: {parsed.equipment.lauterDeadSpace} L</span>}
+                  </div>
+                </div>
+              )}
+
+              {/* Instructions */}
+              {parsed.instructions && parsed.instructions.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Instructions ({parsed.instructions.length} steps)</p>
+                  <ol className="text-sm text-primary/80 space-y-1 list-decimal list-inside">
+                    {parsed.instructions.map((inst, i) => (
+                      <li key={i}>{inst.name || `Step ${i + 1}`}{inst.time ? ` (${inst.time} min)` : ''}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {/* Misc Ingredients */}
+              {parsed.miscIngredients && parsed.miscIngredients.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-default/30">
+                  <p className="text-xs text-muted uppercase tracking-wider mb-1">Misc Ingredients ({parsed.miscIngredients.length})</p>
+                  <ul className="text-sm text-primary/80 space-y-0.5">
+                    {parsed.miscIngredients.map((m, i) => (
+                      <li key={i}>{m.name}{m.amount ? ` — ${m.amount}` : ''}{m.use ? ` (${m.use})` : ''}</li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

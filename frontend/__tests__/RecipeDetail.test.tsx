@@ -22,9 +22,11 @@ vi.mock('../src/context/AuthContext', () => ({
 
 const mockGetRecipeById = vi.fn();
 const mockExportRecipe = vi.fn();
+const mockGetRecipeIngredients = vi.fn();
 vi.mock('../src/services/api', () => ({
   recipeAPI: {
     getRecipeById: (...args: unknown[]) => mockGetRecipeById(...args),
+    getRecipeIngredients: (...args: unknown[]) => mockGetRecipeIngredients(...args),
     deleteRecipe: vi.fn(),
     updateRecipe: vi.fn(),
     exportRecipe: (...args: unknown[]) => mockExportRecipe(...args),
@@ -97,10 +99,8 @@ describe('RecipeDetail Page', () => {
     mockGetRecipeById.mockResolvedValue({
       data: { recipe: mockRecipe },
     });
-    
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ ingredients: mockIngredients }),
+    mockGetRecipeIngredients.mockResolvedValue({
+      data: { ingredients: mockIngredients },
     });
   });
 
@@ -191,7 +191,7 @@ describe('RecipeDetail Page', () => {
     notesTab.click();
 
     await waitFor(() => {
-      expect(screen.getByText('Brewer Notes')).toBeDefined();
+      expect(screen.getByText('Recipe Notes')).toBeDefined();
       expect(screen.getByText('A classic American Pale Ale with citrus hop character')).toBeDefined();
     });
   });

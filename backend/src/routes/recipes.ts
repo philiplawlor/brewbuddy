@@ -465,6 +465,10 @@ recipeRouter.post(
         fermentables: parsed.fermentables,
         yeasts: parsed.yeasts,
         mashProfile: parsed.mashProfile,
+        styleProfile: parsed.styleProfile,
+        equipment: parsed.equipment,
+        instructions: parsed.instructions,
+        miscIngredients: parsed.miscIngredients,
       });
     } catch (error: any) {
       const message = error.message || 'Failed to parse BeerXML';
@@ -501,21 +505,45 @@ recipeRouter.post(
         method: recipeData.method || 'all_grain',
         batchSize: recipeData.batchSize,
         batchSizeUnit: recipeData.batchSizeUnit || 'L',
+        boilSize: recipeData.boilSize,
+        preBoilSize: recipeData.preBoilSize,
         boilTimeMinutes: recipeData.boilTimeMinutes,
         efficiency: recipeData.efficiency,
         notes: recipeData.notes,
+        tasteNotes: recipeData.tasteNotes,
+        tasteRating: recipeData.tasteRating,
         estimatedOg: recipeData.estimatedOg,
         estimatedFg: recipeData.estimatedFg,
         estimatedAbv: recipeData.estimatedAbv,
         estimatedIbu: recipeData.estimatedIbu,
         estimatedSrm: recipeData.estimatedSrm,
-        tasteRating: recipeData.tasteRating,
+        brewer: recipeData.brewer,
+        asstBrewer: recipeData.asstBrewer,
+        brewDate: recipeData.brewDate,
         mashProfile: recipeData.mashProfile,
+        styleProfile: recipeData.styleProfile,
+        equipment: recipeData.equipment,
+        instructions: recipeData.instructions,
+        miscIngredients: recipeData.miscIngredients,
+        carbonation: recipeData.carbonation,
+        forcedCarbonation: recipeData.forcedCarbonation,
+        primingSugarName: recipeData.primingSugarName,
+        primingSugarEquiv: recipeData.primingSugarEquiv,
+        kegPrimingFactor: recipeData.kegPrimingFactor,
+        carbonationTemp: recipeData.carbonationTemp,
+        primaryAgeDays: recipeData.primaryAgeDays,
+        primaryTemp: recipeData.primaryTemp,
+        secondaryAgeDays: recipeData.secondaryAgeDays,
+        secondaryTemp: recipeData.secondaryTemp,
+        tertiaryAgeDays: recipeData.tertiaryAgeDays,
+        tertiaryTemp: recipeData.tertiaryTemp,
+        ageDays: recipeData.ageDays,
+        ageTemp: recipeData.ageTemp,
       });
 
       await recipe.save();
 
-      // Create RecipeIngredient records for hops
+      // Create RecipeIngredient records for hops (with all fields)
       const hops = recipeData.hops || [];
       const hopIngredients = hops.map((h: any, idx: number) => ({
         recipeId: recipe._id,
@@ -528,9 +556,22 @@ recipeRouter.post(
         hopBoilMinutes: h.time,
         hopForm: h.form?.toLowerCase()?.includes('pellet') ? 'pellet' as const : 'whole_leaf' as const,
         hopAdditionTime: h.use,
+        hopOrigin: h.origin,
+        hopType: h.type,
+        hopNotes: h.notes,
+        hopBetaAcid: h.beta,
+        hopHsi: h.hsi,
+        hopHumulene: h.humulene,
+        hopCaryophyllene: h.caryophyllene,
+        hopCohumulone: h.cohumulone,
+        hopMyrcene: h.myrcene,
+        hopSubstitutes: h.substitutes,
+        hopProducer: h.producer,
+        hopProductId: h.productId,
+        hopYear: h.year,
       }));
 
-      // Create RecipeIngredient records for fermentables
+      // Create RecipeIngredient records for fermentables (with all fields)
       const fermentables = recipeData.fermentables || [];
       const fermIngredients = fermentables.map((f: any, idx: number) => ({
         recipeId: recipe._id,
@@ -540,11 +581,21 @@ recipeRouter.post(
         grainWeight: f.amount,
         grainWeightUnit: 'kg' as const,
         lovibond: f.color,
-        potentialExtract: f.yield,
+        potentialExtract: f.potentialExtract || f.yield,
         yieldPercent: f.yield,
+        grainType: f.type,
+        origin: f.origin,
+        supplier: f.supplier,
+        grainNotes: f.notes,
+        coarseFineDiff: f.coarseFineDiff,
+        moisture: f.moisture,
+        protein: f.protein,
+        maxInBatch: f.maxInBatch,
+        recommendMash: f.recommendMash,
+        ibuGalPerLb: f.ibuGalPerLb,
       }));
 
-      // Create RecipeIngredient records for yeast
+      // Create RecipeIngredient records for yeast (with all fields)
       const yeasts = recipeData.yeasts || [];
       const yeastIngredients = yeasts.map((y: any, idx: number) => ({
         recipeId: recipe._id,
@@ -555,10 +606,36 @@ recipeRouter.post(
         yeastForm: y.form,
         laboratory: y.laboratory,
         strainId: y.productId,
+        yeastAmount: y.amount,
+        yeastFlocculation: y.flocculation,
+        yeastAttenuationMin: y.attenuationMin,
+        yeastAttenuationMax: y.attenuationMax,
+        yeastMinTemperature: y.minTemperature,
+        yeastMaxTemperature: y.maxTemperature,
+        yeastTimesCultured: y.timesCultured,
+        yeastMaxReuse: y.maxReuse,
+        yeastAddToSecondary: y.addToSecondary,
+        yeastBestFor: y.bestFor,
+        yeastNotes: y.notes,
+      }));
+
+      // Create RecipeIngredient records for misc ingredients
+      const miscs = recipeData.miscIngredients || [];
+      const miscIngredientsList = miscs.map((m: any, idx: number) => ({
+        recipeId: recipe._id,
+        ingredientType: 'misc' as const,
+        order: hops.length + fermentables.length + yeasts.length + idx + 1,
+        name: m.name,
+        miscType: m.type,
+        miscUse: m.use,
+        miscUseFor: m.useFor,
+        miscAmountIsWeight: m.amountIsWeight,
+        miscTime: m.time,
+        miscNotes: m.notes,
       }));
 
       // Save all ingredients
-      const allIngredients = [...hopIngredients, ...fermIngredients, ...yeastIngredients];
+      const allIngredients = [...hopIngredients, ...fermIngredients, ...yeastIngredients, ...miscIngredientsList];
       if (allIngredients.length > 0) {
         await RecipeIngredient.insertMany(allIngredients);
       }
