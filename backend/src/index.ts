@@ -24,17 +24,18 @@ app.use(helmet());
 // CORS - restrict to known origins
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map((s) => s.trim())
-  : ['http://localhost:5173', 'http://localhost:80'];
+  : ['http://localhost:5173', 'http://localhost:80', 'http://localhost', 'http://127.0.0.1:80', 'http://127.0.0.1', 'http://[::1]:80', 'http://[::1]'];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      // Allow requests with no origin (mobile apps, curl, server-to-server, same-origin)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error('Not allowed by CORS'));
+      console.warn(`CORS blocked origin: ${origin}`);
+      return callback(null, false);
     },
     credentials: true,
   })
