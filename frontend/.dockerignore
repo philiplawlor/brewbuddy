@@ -17,7 +17,6 @@ tests
 *.test.tsx
 *.spec.tsx
 vitest.config.*
-tsconfig.json
 .dockerignore
 Dockerfile*
 docker-compose*

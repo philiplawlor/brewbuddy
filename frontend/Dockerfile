@@ -14,8 +14,8 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build application (disable source maps for production security)
-RUN npm run build -- --sourcemap=false
+# Build application (sourcemaps disabled by default in vite.config.ts)
+RUN npm run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
