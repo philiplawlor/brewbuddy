@@ -14,6 +14,10 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Set API URL to relative path (nginx proxies /api/ to backend)
+ARG VITE_API_URL=/api
+ENV VITE_API_URL=${VITE_API_URL}
+
 # Build application (sourcemaps disabled by default in vite.config.ts)
 RUN npm run build
 
