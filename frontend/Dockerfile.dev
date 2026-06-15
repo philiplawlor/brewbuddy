@@ -7,6 +7,9 @@ WORKDIR /app
 # Install curl for health checks
 RUN apk add --no-cache curl
 
+# Create non-root user
+RUN addgroup -S brewbuddy && adduser -S brewbuddy -G brewbuddy
+
 # Copy package files
 COPY package*.json ./
 
@@ -15,6 +18,11 @@ RUN npm install
 
 # Copy source code
 COPY . .
+
+# Change ownership to non-root user
+RUN chown -R brewbuddy:brewbuddy /app
+
+USER brewbuddy
 
 # Expose Vite dev server port
 EXPOSE 5173

@@ -14,17 +14,28 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build application
-RUN npm run build
+# Build application (disable source maps for production security)
+RUN npm run build -- --sourcemap=false
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
+
+# Create non-root user for nginx
+RUN addgroup -S brewbuddy && adduser -S brewbuddy -G brewbuddy
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Fix permissions for nginx
+RUN chown -R brewbuddy:brewbuddy /usr/share/nginx/html && \
+    chown -R brewbuddy:brewbuddy /var/cache/nginx && \
+    chown -R brewbuddy:brewbuddy /var/log/nginx && \
+    chown -R brewbuddy:brewbuddy /etc/nginx/conf.d && \
+    touch /var/run/nginx.pid && \
+    chown brewbuddy:brewbuddy /var/run/nginx.pid
 
 # Expose port 80
 EXPOSE 80

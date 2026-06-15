@@ -47,7 +47,7 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/brewbuddy
       - NODE_ENV=development
-      - JWT_SECRET=dev-secret-change-in-production
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=7d
     depends_on:
       mongodb:

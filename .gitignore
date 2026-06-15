@@ -46,3 +46,10 @@ coverage/
 # Temporary
 tmp/
 temp/
+
+# TLS/Certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx

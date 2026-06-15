@@ -4,6 +4,9 @@
 FROM node:20-alpine
 WORKDIR /app
 
+# Create non-root user
+RUN addgroup -S brewbuddy && adduser -S brewbuddy -G brewbuddy
+
 # Copy package files
 COPY package*.json ./
 
@@ -12,6 +15,11 @@ RUN npm ci --omit=dev
 
 # Copy built application
 COPY dist ./dist
+
+# Change ownership to non-root user
+RUN chown -R brewbuddy:brewbuddy /app
+
+USER brewbuddy
 
 # Expose API port
 EXPOSE 3001

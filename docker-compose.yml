@@ -21,8 +21,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: brewbuddy-backend
-    ports:
-      - "3001:3001"
+    # Internal only - nginx proxies to backend, no host port needed
+    expose:
+      - "3001"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/brewbuddy
       - NODE_ENV=production
@@ -34,6 +35,11 @@ services:
     networks:
       - brewbuddy-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
       interval: 30s
@@ -42,10 +48,11 @@ services:
       start_period: 10s
 
   mongodb:
-    image: mongo:8.0
+    image: mongo:8.0.13
     container_name: brewbuddy-mongodb
-    ports:
-      - "27017:27017"
+    # Internal only - backend connects directly, no host port needed
+    expose:
+      - "27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGODB_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_INITDB_ROOT_PASSWORD}
@@ -54,6 +61,11 @@ services:
     networks:
       - brewbuddy-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s

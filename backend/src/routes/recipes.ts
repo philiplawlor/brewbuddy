@@ -123,7 +123,9 @@ recipeRouter.get('/', auth, async (req: Request, res: Response) => {
     }
 
     if (search) {
-      filter.recipeName = { $regex: search, $options: 'i' };
+      // Escape regex special characters to prevent ReDoS injection
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.recipeName = { $regex: escaped, $options: 'i' };
     }
 
     const sortOptions: Record<string, 1 | -1> = { [sortField]: sortOrder };
@@ -368,7 +370,9 @@ recipeRouter.get('/community', async (req: Request, res: Response) => {
     }
 
     if (search) {
-      filter.recipeName = { $regex: search, $options: 'i' };
+      // Escape regex special characters to prevent ReDoS injection
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.recipeName = { $regex: escaped, $options: 'i' };
     }
 
     let sortOptions: Record<string, 1 | -1> = {};
@@ -749,8 +753,21 @@ recipeRouter.put(
         return res.status(404).json({ message: 'Recipe not found' });
       }
 
-      const updatedFields = req.body;
-      Object.assign(recipe, updatedFields);
+      // Whitelist allowed fields to prevent mass assignment
+      const allowedFields = [
+        'recipeName', 'style', 'styleCode', 'method', 'batchSize', 'batchSizeUnit',
+        'boilTimeMinutes', 'efficiency', 'isPublic', 'notes',
+        'styleProfile', 'equipment', 'mashProfile', 'miscIngredients',
+        'carbonation', 'forcedCarbonation', 'primingSugarName',
+        'brewer', 'asstBrewer', 'brewDate',
+      ];
+      const sanitized: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          sanitized[field] = req.body[field];
+        }
+      }
+      Object.assign(recipe, sanitized);
 
       await recipe.save();
 

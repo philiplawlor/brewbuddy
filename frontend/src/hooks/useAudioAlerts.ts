@@ -9,7 +9,15 @@ interface AlertSettings {
 export function useAudioAlerts() {
   const [settings, setSettings] = useState<AlertSettings>(() => {
     const saved = localStorage.getItem('brewbuddy-alert-settings');
-    return saved ? JSON.parse(saved) : { sound: true, vibration: true, visual: true };
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Corrupted data, reset to defaults
+        localStorage.removeItem('brewbuddy-alert-settings');
+      }
+    }
+    return { sound: true, vibration: true, visual: true };
   });
 
   const toggleSound = useCallback(() => {
