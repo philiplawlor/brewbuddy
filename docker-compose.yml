@@ -25,7 +25,7 @@ services:
     expose:
       - "3001"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/brewbuddy
+      - MONGODB_URI=${MONGODB_URI}
       - NODE_ENV=production
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}

@@ -15,6 +15,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust first proxy (nginx) - needed for rate limiting behind reverse proxy
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
