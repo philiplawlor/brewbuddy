@@ -58,7 +58,12 @@ export function ImportRecipe() {
     if (!parsed) return;
     setImporting(true);
     try {
-      const response = await recipeAPI.importRecipeConfirm(parsed.recipe);
+      const response = await recipeAPI.importRecipeConfirm({
+        ...parsed.recipe,
+        hops: parsed.hops,
+        fermentables: parsed.fermentables,
+        yeasts: parsed.yeasts,
+      });
       navigate(`/recipes/${response.data.recipe._id}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to import recipe. Please try again.');

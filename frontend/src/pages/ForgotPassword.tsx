@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { authAPI } from '../services/api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -12,24 +13,11 @@ const ForgotPassword = () => {
     setErrorMessage('');
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus('success');
-      } else {
-        setStatus('error');
-        setErrorMessage(data.message || 'Something went wrong');
-      }
-    } catch {
+      await authAPI.forgotPassword(email);
+      setStatus('success');
+    } catch (err: any) {
       setStatus('error');
-      setErrorMessage('Network error. Please try again.');
+      setErrorMessage(err.response?.data?.message || 'Something went wrong');
     }
   };
 

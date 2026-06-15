@@ -49,6 +49,9 @@ export interface ParsedBeerXML {
     time?: number;
     use?: string;
     form?: string;
+    origin?: string;
+    type?: string;
+    notes?: string;
   }>;
   fermentables: Array<{
     name: string;
@@ -56,6 +59,10 @@ export interface ParsedBeerXML {
     yield?: number;
     color?: number;
     type?: string;
+    origin?: string;
+    supplier?: string;
+    notes?: string;
+    potentialExtract?: number;
   }>;
   yeasts: Array<{
     name: string;
@@ -65,8 +72,32 @@ export interface ParsedBeerXML {
     laboratory?: string;
     productId?: string;
     attenuation?: number;
+    minTemperature?: number;
+    maxTemperature?: number;
+    flocculation?: string;
+    notes?: string;
   }>;
   mashProfile?: IMashProfile;
+  brewer?: string;
+  styleCategory?: string;
+  styleLetter?: string;
+  styleGuide?: string;
+  styleNotes?: string;
+  ogMin?: number;
+  ogMax?: number;
+  fgMin?: number;
+  fgMax?: number;
+  ibuMin?: number;
+  ibuMax?: number;
+  colorMin?: number;
+  colorMax?: number;
+  abvMin?: number;
+  abvMax?: number;
+  carbonation?: number;
+  primaryAgeDays?: number;
+  primaryTemp?: number;
+  secondaryAgeDays?: number;
+  secondaryTemp?: number;
 }
 
 // Sentinel's security config: disable external entity processing
@@ -124,7 +155,9 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
   const mapped: Partial<IRecipe> = {
     recipeName: recipe.name || 'Imported Recipe',
     style: recipe.style?.name || undefined,
-    styleCode: recipe.style?.category_number || undefined,
+    styleCode: recipe.style?.category_number
+      ? `${recipe.style.category_number}${recipe.style.style_letter || ''}`
+      : undefined,
     method: METHOD_MAP[recipe.type] || 'all_grain',
     batchSize: parseFloat(recipe.batch_size) || undefined,
     batchSizeUnit: 'L',
@@ -133,22 +166,29 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
     notes: [recipe.notes, recipe.taste_notes].filter(Boolean).join('\n\n') || undefined,
     estimatedOg: parseFloat(recipe.og) || undefined,
     estimatedFg: parseFloat(recipe.fg) || undefined,
+    estimatedAbv: recipe.abv ? parseFloat(recipe.abv) : undefined,
+    estimatedIbu: recipe.ibu ? parseFloat(recipe.ibu) : undefined,
+    estimatedSrm: recipe.color ? parseFloat(recipe.color) : undefined,
+    tasteRating: recipe.taste_rating ? parseFloat(recipe.taste_rating) : undefined,
   };
 
-  // Map hops
+  // Map hops with additional fields
   const hopsRaw = recipe.hops?.hop;
   const hops = hopsRaw
     ? (Array.isArray(hopsRaw) ? hopsRaw : [hopsRaw]).map((h: any) => ({
         name: h.name || 'Unknown Hop',
         alpha: parseFloat(h.alpha) || undefined,
-        amount: parseFloat(h.amount) || undefined, // BeerXML uses kg
+        amount: parseFloat(h.amount) || undefined,
         time: parseFloat(h.time) || undefined,
         use: HOP_USE_MAP[h.use] || h.use || 'Boil',
         form: h.form || 'Pellet',
+        origin: h.origin || undefined,
+        type: h.type || undefined,
+        notes: h.notes || undefined,
       }))
     : [];
 
-  // Map fermentables
+  // Map fermentables with additional fields
   const fermRaw = recipe.fermentables?.fermentable;
   const fermentables = fermRaw
     ? (Array.isArray(fermRaw) ? fermRaw : [fermRaw]).map((f: any) => ({
@@ -157,10 +197,13 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
         yield: parseFloat(f.yield) || undefined,
         color: parseFloat(f.color) || undefined,
         type: f.type || 'Grain',
+        origin: f.origin || undefined,
+        supplier: f.supplier || undefined,
+        notes: f.notes || undefined,
       }))
     : [];
 
-  // Map yeast
+  // Map yeast with additional fields
   const yeastRaw = recipe.yeasts?.yeast;
   const yeasts = yeastRaw
     ? (Array.isArray(yeastRaw) ? yeastRaw : [yeastRaw]).map((y: any) => ({
@@ -171,6 +214,10 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
         laboratory: y.laboratory || undefined,
         productId: y.product_id || undefined,
         attenuation: parseFloat(y.attenuation) || undefined,
+        minTemperature: parseFloat(y.min_temperature) || undefined,
+        maxTemperature: parseFloat(y.max_temperature) || undefined,
+        flocculation: y.flocculation || undefined,
+        notes: y.notes || undefined,
       }))
     : [];
 
@@ -198,7 +245,33 @@ function mapBeerXMLToRecipe(recipe: any): ParsedBeerXML {
     };
   }
 
-  return { recipe: mapped, hops, fermentables, yeasts, mashProfile };
+  return {
+    recipe: mapped,
+    hops,
+    fermentables,
+    yeasts,
+    mashProfile,
+    brewer: recipe.brewer || undefined,
+    styleCategory: recipe.style?.category || undefined,
+    styleLetter: recipe.style?.style_letter || undefined,
+    styleGuide: recipe.style?.style_guide || undefined,
+    styleNotes: recipe.style?.notes || undefined,
+    ogMin: recipe.style?.og_min ? parseFloat(recipe.style.og_min) : undefined,
+    ogMax: recipe.style?.og_max ? parseFloat(recipe.style.og_max) : undefined,
+    fgMin: recipe.style?.fg_min ? parseFloat(recipe.style.fg_min) : undefined,
+    fgMax: recipe.style?.fg_max ? parseFloat(recipe.style.fg_max) : undefined,
+    ibuMin: recipe.style?.ibu_min ? parseFloat(recipe.style.ibu_min) : undefined,
+    ibuMax: recipe.style?.ibu_max ? parseFloat(recipe.style.ibu_max) : undefined,
+    colorMin: recipe.style?.color_min ? parseFloat(recipe.style.color_min) : undefined,
+    colorMax: recipe.style?.color_max ? parseFloat(recipe.style.color_max) : undefined,
+    abvMin: recipe.style?.abv_min ? parseFloat(recipe.style.abv_min) : undefined,
+    abvMax: recipe.style?.abv_max ? parseFloat(recipe.style.abv_max) : undefined,
+    carbonation: recipe.carbonation ? parseFloat(recipe.carbonation) : undefined,
+    primaryAgeDays: recipe.primary_age ? parseFloat(recipe.primary_age) : undefined,
+    primaryTemp: recipe.primary_temp ? parseFloat(recipe.primary_temp) : undefined,
+    secondaryAgeDays: recipe.secondary_age ? parseFloat(recipe.secondary_age) : undefined,
+    secondaryTemp: recipe.secondary_temp ? parseFloat(recipe.secondary_temp) : undefined,
+  };
 }
 
 /**

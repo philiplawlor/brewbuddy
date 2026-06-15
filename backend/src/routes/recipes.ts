@@ -1,8 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { body } from 'express-validator';
+import { Types } from 'mongoose';
 import { validate } from '../middleware/validate';
 import { auth } from '../middleware/auth';
 import Recipe from '../models/Recipe';
+import RecipeIngredient from '../models/RecipeIngredient';
 import Rating from '../models/Rating';
 import Comment from '../models/Comment';
 import { parseBeerXML, exportToBeerXML } from '../services/BeerXMLParser';
@@ -504,9 +506,62 @@ recipeRouter.post(
         notes: recipeData.notes,
         estimatedOg: recipeData.estimatedOg,
         estimatedFg: recipeData.estimatedFg,
+        estimatedAbv: recipeData.estimatedAbv,
+        estimatedIbu: recipeData.estimatedIbu,
+        estimatedSrm: recipeData.estimatedSrm,
+        tasteRating: recipeData.tasteRating,
+        mashProfile: recipeData.mashProfile,
       });
 
       await recipe.save();
+
+      // Create RecipeIngredient records for hops
+      const hops = recipeData.hops || [];
+      const hopIngredients = hops.map((h: any, idx: number) => ({
+        recipeId: recipe._id,
+        ingredientType: 'hops' as const,
+        order: idx + 1,
+        name: h.name,
+        hopsWeight: h.amount ? h.amount * 1000 : undefined, // Convert kg to g
+        hopsWeightUnit: 'g' as const,
+        hopAlphaAcid: h.alpha,
+        hopBoilMinutes: h.time,
+        hopForm: h.form?.toLowerCase()?.includes('pellet') ? 'pellet' as const : 'whole_leaf' as const,
+        hopAdditionTime: h.use,
+      }));
+
+      // Create RecipeIngredient records for fermentables
+      const fermentables = recipeData.fermentables || [];
+      const fermIngredients = fermentables.map((f: any, idx: number) => ({
+        recipeId: recipe._id,
+        ingredientType: 'grain' as const,
+        order: hops.length + idx + 1,
+        name: f.name,
+        grainWeight: f.amount,
+        grainWeightUnit: 'kg' as const,
+        lovibond: f.color,
+        potentialExtract: f.yield,
+        yieldPercent: f.yield,
+      }));
+
+      // Create RecipeIngredient records for yeast
+      const yeasts = recipeData.yeasts || [];
+      const yeastIngredients = yeasts.map((y: any, idx: number) => ({
+        recipeId: recipe._id,
+        ingredientType: 'yeast' as const,
+        order: hops.length + fermentables.length + idx + 1,
+        name: y.name,
+        yeastType: y.type,
+        yeastForm: y.form,
+        laboratory: y.laboratory,
+        strainId: y.productId,
+      }));
+
+      // Save all ingredients
+      const allIngredients = [...hopIngredients, ...fermIngredients, ...yeastIngredients];
+      if (allIngredients.length > 0) {
+        await RecipeIngredient.insertMany(allIngredients);
+      }
 
       res.status(201).json({ recipe });
     } catch (error) {
@@ -514,6 +569,35 @@ recipeRouter.post(
     }
   }
 );
+
+// Get ingredients for a recipe
+recipeRouter.get('/:id/ingredients', auth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!._id;
+
+    // Validate ObjectId format to prevent BSON crash
+    if (!Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const recipe = await Recipe.findById(id).lean();
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const isOwner = recipe.userId.toString() === userId.toString();
+    const isPublic = recipe.isPublic;
+    if (!isOwner && !isPublic) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    const ingredients = await RecipeIngredient.find({ recipeId: id }).sort({ order: 1 }).lean();
+    res.json({ ingredients });
+  } catch (error) {
+    throw error;
+  }
+});
 
 // BeerXML Export endpoint
 recipeRouter.get('/:id/export', auth, async (req: Request, res: Response) => {

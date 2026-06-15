@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -56,25 +57,12 @@ const ResetPassword = () => {
     setErrorMessage('');
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      const response = await fetch(`${API_URL}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setStatus('success');
-        setTimeout(() => navigate('/login'), 3000);
-      } else {
-        setStatus('error');
-        setErrorMessage(data.message || 'Something went wrong');
-      }
-    } catch {
+      await authAPI.resetPassword(token, password);
+      setStatus('success');
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (err: any) {
       setStatus('error');
-      setErrorMessage('Network error. Please try again.');
+      setErrorMessage(err.response?.data?.message || 'Something went wrong');
     }
   };
 

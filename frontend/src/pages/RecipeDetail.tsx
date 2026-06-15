@@ -49,15 +49,8 @@ export function RecipeDetail() {
 
   const fetchIngredients = async (recipeId: string) => {
     try {
-      const response = await fetch(`/api/recipes/${recipeId}/ingredients`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setIngredients(data.ingredients || []);
-      }
+      const response = await recipeAPI.getRecipeIngredients(recipeId);
+      setIngredients(response.data.ingredients || []);
     } catch (err) {
       console.error('Failed to load ingredients:', err);
     }
