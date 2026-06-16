@@ -9,9 +9,6 @@ const connectDB = async (): Promise<void> => {
       socketTimeoutMS: 45000,
       heartbeatFrequencyMS: 10000,
       maxPoolSize: 10,
-      autoReconnect: true,
-      reconnectTries: Number.MAX_VALUE,
-      reconnectInterval: 5000,
     });
     console.log('MongoDB connected successfully');
   } catch (error) {
@@ -22,21 +19,17 @@ const connectDB = async (): Promise<void> => {
   }
 };
 
-// Handle reconnection — openUri on the existing connection object
+// Handle reconnection
 mongoose.connection.on('disconnected', async () => {
   console.log('MongoDB disconnected — attempting reconnect...');
   try {
     const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/brewbuddy';
-    // Small delay before reconnecting
     await new Promise(resolve => setTimeout(resolve, 3000));
     await mongoose.connect(mongoURI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       heartbeatFrequencyMS: 10000,
       maxPoolSize: 10,
-      autoReconnect: true,
-      reconnectTries: Number.MAX_VALUE,
-      reconnectInterval: 5000,
     });
     console.log('MongoDB reconnected successfully');
   } catch (error) {

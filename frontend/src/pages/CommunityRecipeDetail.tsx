@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { recipeAPI } from '../services/api';
 import { StarRating } from '../components/StarRating';
 import { CommentSection } from '../components/CommentSection';
@@ -7,12 +7,16 @@ import { useAuth } from '../context/AuthContext';
 
 export function CommunityRecipeDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [recipe, setRecipe] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [ratings, setRatings] = useState({ averageRating: 0, ratingCount: 0, userRating: null as number | null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [cloning, setCloning] = useState(false);
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [cloneName, setCloneName] = useState('');
 
   useEffect(() => {
     if (id) fetchRecipe(id);
@@ -61,6 +65,26 @@ export function CommunityRecipeDetail() {
     if (!id) return;
     await recipeAPI.deleteComment(id, commentId);
     setComments(comments.filter((c) => c._id !== commentId));
+  };
+
+  const handleClone = async () => {
+    if (!id) return;
+    try {
+      setCloning(true);
+      const data = cloneName.trim() ? { recipeName: cloneName.trim() } : undefined;
+      const response = await recipeAPI.cloneRecipe(id, data);
+      navigate(`/recipes/${response.data.recipe._id}`);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to import recipe');
+    } finally {
+      setCloning(false);
+      setShowCloneModal(false);
+    }
+  };
+
+  const openCloneModal = () => {
+    setCloneName(`${recipe?.recipeName || ''} (Clone)`);
+    setShowCloneModal(true);
   };
 
   if (loading) {
@@ -132,6 +156,15 @@ export function CommunityRecipeDetail() {
                   {ratings.ratingCount} {ratings.ratingCount === 1 ? 'rating' : 'ratings'}
                 </p>
               </div>
+              {user && (
+                <button
+                  onClick={openCloneModal}
+                  disabled={cloning}
+                  className="ml-4 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-accent-primary text-white hover:opacity-90 disabled:opacity-50"
+                >
+                  {cloning ? 'Importing...' : 'Import to My Recipes'}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -215,6 +248,45 @@ export function CommunityRecipeDetail() {
             onDelete={handleDeleteComment}
           />
         </div>
+
+        {/* Clone Modal */}
+        {showCloneModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="card-theme rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
+              <h3 className="text-xl font-bold mb-2 font-display text-primary">Import Recipe</h3>
+              <p className="text-secondary text-sm mb-4">
+                This will copy the recipe to your collection. You can rename it and make it your own.
+              </p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-secondary mb-1">Recipe Name</label>
+                <input
+                  type="text"
+                  value={cloneName}
+                  onChange={(e) => setCloneName(e.target.value)}
+                  className="input-theme w-full rounded-lg px-4 py-2"
+                  maxLength={100}
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowCloneModal(false)}
+                  disabled={cloning}
+                  className="px-4 py-2 rounded-lg font-medium text-secondary hover:text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleClone}
+                  disabled={cloning || !cloneName.trim()}
+                  className="px-4 py-2 rounded-lg font-medium bg-accent-primary text-white hover:opacity-90 disabled:opacity-50 transition-all"
+                >
+                  {cloning ? 'Importing...' : 'Import Recipe'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

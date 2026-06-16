@@ -680,6 +680,100 @@ recipeRouter.get('/:id/ingredients', auth, async (req: Request, res: Response) =
   }
 });
 
+// Clone Recipe — copy a community recipe into your own recipe list
+recipeRouter.post(
+  '/:id/clone',
+  auth,
+  [body('recipeName').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Recipe name must be at most 100 characters')],
+  validate([body('recipeName').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Recipe name must be at most 100 characters')]),
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!._id;
+
+      if (!Types.ObjectId.isValid(id)) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+
+      const source = await Recipe.findById(id).lean();
+      if (!source) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+
+      if (!source.isPublic && source.userId.toString() !== userId.toString()) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+
+      const newRecipeName = req.body.recipeName || `${source.recipeName} (Clone)`;
+
+      // Create the new recipe (private, owned by current user)
+      const clonedData: Record<string, any> = {
+        userId,
+        recipeName: newRecipeName,
+        style: source.style,
+        styleCode: source.styleCode,
+        version: 1,
+        isTemplate: false,
+        isPublic: false,
+        isArchived: false,
+        method: source.method,
+        batchSize: source.batchSize,
+        batchSizeUnit: source.batchSizeUnit,
+        boilSize: source.boilSize,
+        preBoilSize: source.preBoilSize,
+        boilTimeMinutes: source.boilTimeMinutes,
+        efficiency: source.efficiency,
+        estimatedOg: source.estimatedOg,
+        estimatedFg: source.estimatedFg,
+        estimatedAbv: source.estimatedAbv,
+        estimatedIbu: source.estimatedIbu,
+        estimatedSrm: source.estimatedSrm,
+        estimatedCalories: source.estimatedCalories,
+        notes: source.notes,
+        tasteNotes: source.tasteNotes,
+        brewer: req.user!.username || req.user!.email,
+        asstBrewer: source.asstBrewer,
+        mashProfile: source.mashProfile,
+        styleProfile: source.styleProfile,
+        equipment: source.equipment,
+        instructions: source.instructions,
+        miscIngredients: source.miscIngredients,
+        carbonation: source.carbonation,
+        forcedCarbonation: source.forcedCarbonation,
+        primingSugarName: source.primingSugarName,
+        primingSugarEquiv: source.primingSugarEquiv,
+        kegPrimingFactor: source.kegPrimingFactor,
+        carbonationTemp: source.carbonationTemp,
+        primaryAgeDays: source.primaryAgeDays,
+        primaryTemp: source.primaryTemp,
+        secondaryAgeDays: source.secondaryAgeDays,
+        secondaryTemp: source.secondaryTemp,
+        tertiaryAgeDays: source.tertiaryAgeDays,
+        tertiaryTemp: source.tertiaryTemp,
+        ageDays: source.ageDays,
+        ageTemp: source.ageTemp,
+      };
+
+      const newRecipe = new Recipe(clonedData);
+      await newRecipe.save();
+
+      // Clone RecipeIngredient documents
+      const sourceIngredients = await RecipeIngredient.find({ recipeId: id }).lean();
+      if (sourceIngredients.length > 0) {
+        const clonedIngredients = sourceIngredients.map((ing) => {
+          const { _id, recipeId, createdAt, updatedAt, __v, ...rest } = ing;
+          return { ...rest, recipeId: newRecipe._id };
+        });
+        await RecipeIngredient.insertMany(clonedIngredients);
+      }
+
+      res.status(201).json({ recipe: newRecipe });
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
 // BeerXML Export endpoint
 recipeRouter.get('/:id/export', auth, async (req: Request, res: Response) => {
   try {

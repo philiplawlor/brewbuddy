@@ -105,6 +105,10 @@ export const recipeAPI = {
 
   getRecipeIngredients: (id: string) =>
     api.get(`/recipes/${id}/ingredients`),
+
+  // Clone Recipe
+  cloneRecipe: (id: string, data?: { recipeName?: string }) =>
+    api.post(`/recipes/${id}/clone`, data || {}),
 };
 
 // Brew Session API
