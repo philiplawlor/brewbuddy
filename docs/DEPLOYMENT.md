@@ -1,12 +1,56 @@
 # BrewBuddy - Deployment Guide
 
-**Version:** 0.1.0
+**Version:** 0.6.0
 
 ---
 
 ## Overview
 
 BrewBuddy uses Docker Compose for both development and production deployments. This guide covers setup, configuration, and deployment procedures.
+
+---
+
+## ⚠️ MANDATORY: Pre-Deployment Safety Checklist
+
+**原则: NEVER destroy data without explicit human confirmation.**
+
+### Before ANY Docker Operation That Could Affect Data
+
+1. **STOP. Communicate first.** Tell Phil:
+   - What you're about to do
+   - What data is currently at risk (users, recipes, sessions, etc.)
+   - What the expected outcome is
+   - Wait for explicit confirmation before proceeding
+
+2. **Snapshot current state:**
+   ```bash
+   docker exec brewbuddy-mongodb mongosh -u admin -p $MONGO_PWD --authenticationDatabase admin brewbuddy --quiet --eval "
+     JSON.stringify({
+       users: db.users.countDocuments(),
+       recipes: db.recipes.countDocuments(),
+       sessions: db.brewsessions.countDocuments()
+     })
+   "
+   ```
+
+3. **NEVER use destructive flags without approval:**
+   - ❌ `docker compose down -v` (removes volumes = DATA LOSS)
+   - ❌ `docker volume rm` (permanent data deletion)
+   - ❌ `docker system prune` (already prohibited)
+   - ❌ `docker compose down --rmi all` (removes images)
+   - ✅ `docker compose down` (safe — keeps volumes)
+   - ✅ `docker compose up -d --force-recreate` (safe — keeps volumes)
+   - ✅ `docker compose build --no-cache && docker compose up -d` (safe)
+
+4. **Verify data after every rebuild:**
+   ```bash
+   docker exec brewbuddy-mongodb mongosh -u admin -p $MONGO_PWD --authenticationDatabase admin brewbuddy --quiet --eval "
+     print('Users: ' + db.users.countDocuments());
+     print('Recipes: ' + db.recipes.countDocuments());
+   "
+   ```
+
+5. **If data is missing after a rebuild:** STOP. Do not proceed. Report to Phil immediately.
 
 ---
 
@@ -422,7 +466,7 @@ docker compose exec [service] sh
 # Check MongoDB
 docker compose exec mongodb mongosh -u admin -p
 
-# Reset everything (⚠️ destroys data)
+# Reset everything (⚠️ destroys data — REQUIRES EXPLICIT APPROVAL)
 docker compose down -v
 docker compose up -d --build
 ```
