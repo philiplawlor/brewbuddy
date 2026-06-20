@@ -1,98 +1,168 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { recipeAPI } from '../services/api';
-import { StarRating } from '../components/StarRating';
-import { CommentSection } from '../components/CommentSection';
+import { Recipe, RecipeIngredient } from '../types';
+import { IngredientList } from '../components/IngredientList';
 import { useAuth } from '../context/AuthContext';
+
+interface Comment {
+  _id: string;
+  userId: { _id: string; username: string };
+  text: string;
+  createdAt: string;
+}
+
+interface Rating {
+  _id: string;
+  userId: { username: string };
+  rating: number;
+}
+
+const methodLabels: Record<string, string> = {
+  all_grain: 'All Grain',
+  partial_mash: 'Partial Mash',
+  extract: 'Extract',
+  biab: 'BIAB',
+};
+
+type TabKey = 'ingredients' | 'brewday' | 'style' | 'notes';
 
 export function CommunityRecipeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [recipe, setRecipe] = useState<any>(null);
-  const [comments, setComments] = useState<any[]>([]);
-  const [ratings, setRatings] = useState({ averageRating: 0, ratingCount: 0, userRating: null as number | null });
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [ingredients, setIngredients] = useState<RecipeIngredient[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [cloning, setCloning] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>('ingredients');
   const [showCloneModal, setShowCloneModal] = useState(false);
   const [cloneName, setCloneName] = useState('');
+  const [cloning, setCloning] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [submittingRating, setSubmittingRating] = useState(false);
 
   useEffect(() => {
-    if (id) fetchRecipe(id);
+    if (id) {
+      fetchRecipe(id);
+      fetchIngredients(id);
+      fetchComments(id);
+      fetchRatings(id);
+    }
   }, [id]);
 
   const fetchRecipe = async (recipeId: string) => {
     try {
       setLoading(true);
+      setError(null);
       const response = await recipeAPI.getCommunityRecipeById(recipeId);
       setRecipe(response.data.recipe);
-      setComments(response.data.comments || []);
-
-      // Fetch ratings
-      const ratingsResponse = await recipeAPI.getRecipeRatings(recipeId);
-      setRatings(ratingsResponse.data);
-
-      setError('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load recipe');
+      setCloneName(response.data.recipe.recipeName);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to load recipe');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRate = async (rating: number) => {
-    if (!id) return;
+  const fetchIngredients = async (recipeId: string) => {
     try {
-      const response = await recipeAPI.rateRecipe(id, { rating });
-      setRatings({
-        averageRating: response.data.averageRating,
-        ratingCount: response.data.ratingCount,
-        userRating: rating,
-      });
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to rate recipe');
+      const response = await recipeAPI.getRecipeIngredients(recipeId);
+      setIngredients(response.data.ingredients || []);
+    } catch (err) {
+      console.error('Failed to load ingredients:', err);
     }
   };
 
-  const handleAddComment = async (text: string) => {
-    if (!id) return;
-    const response = await recipeAPI.addComment(id, { text });
-    setComments([response.data.comment, ...comments]);
+  const fetchComments = async (recipeId: string) => {
+    try {
+      const response = await recipeAPI.getComments(recipeId);
+      setComments(response.data.comments || []);
+    } catch (err) {
+      console.error('Failed to load comments:', err);
+    }
+  };
+
+  const fetchRatings = async (recipeId: string) => {
+    try {
+      const response = await recipeAPI.getRecipeRatings(recipeId);
+      setRatings(response.data.ratings || []);
+    } catch (err) {
+      console.error('Failed to load ratings:', err);
+    }
+  };
+
+  const handleClone = async () => {
+    if (!id || !cloneName.trim()) return;
+
+    try {
+      setCloning(true);
+      const response = await recipeAPI.cloneRecipe(id, { recipeName: cloneName.trim() });
+      navigate(`/recipes/${response.data.recipe._id}`);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to clone recipe');
+      setShowCloneModal(false);
+    } finally {
+      setCloning(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!id || !newComment.trim()) return;
+
+    try {
+      setSubmittingComment(true);
+      await recipeAPI.addComment(id, { text: newComment.trim() });
+      setNewComment('');
+      fetchComments(id);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to add comment');
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const handleDeleteComment = async (commentId: string) => {
     if (!id) return;
-    await recipeAPI.deleteComment(id, commentId);
-    setComments(comments.filter((c) => c._id !== commentId));
-  };
 
-  const handleClone = async () => {
-    if (!id) return;
     try {
-      setCloning(true);
-      const data = cloneName.trim() ? { recipeName: cloneName.trim() } : undefined;
-      const response = await recipeAPI.cloneRecipe(id, data);
-      navigate(`/recipes/${response.data.recipe._id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to import recipe');
-    } finally {
-      setCloning(false);
-      setShowCloneModal(false);
+      await recipeAPI.deleteComment(id, commentId);
+      fetchComments(id);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to delete comment');
     }
   };
 
-  const openCloneModal = () => {
-    setCloneName(`${recipe?.recipeName || ''} (Clone)`);
-    setShowCloneModal(true);
+  const handleRate = async (rating: number) => {
+    if (!id) return;
+
+    try {
+      setSubmittingRating(true);
+      await recipeAPI.rateRecipe(id, { rating });
+      setUserRating(rating);
+      fetchRatings(id);
+    } catch (err: unknown) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      setError(apiError.response?.data?.message || 'Failed to rate recipe');
+    } finally {
+      setSubmittingRating(false);
+    }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-accent-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-secondary">Loading recipe...</p>
+          <div className="w-12 h-12 border-4 border-t-current rounded-full animate-spin mx-auto mb-4" style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }} />
+          <p className="text-lg font-display" style={{ color: 'var(--text-secondary)' }}>Loading recipe...</p>
         </div>
       </div>
     );
@@ -100,194 +170,608 @@ export function CommunityRecipeDetail() {
 
   if (error || !recipe) {
     return (
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-6">
-            {error || 'Recipe not found'}
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="card-theme rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-red-400 mb-4 font-display">Error</h2>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>{error || 'Recipe not found'}</p>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => id && fetchRecipe(id)}
+                className="text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+                style={{ backgroundColor: 'var(--accent-primary)' }}
+              >
+                Try Again
+              </button>
+              <Link
+                to="/community"
+                className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Back to Community
+              </Link>
+            </div>
           </div>
-          <Link
-            to="/community"
-            className="text-accent-primary hover:text-accent-hover font-medium"
-          >
-            ← Back to Community
-          </Link>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      <div className="container mx-auto px-4 py-8">
-        {/* Back Link */}
-        <Link
-          to="/community"
-          className="text-secondary hover:text-accent-primary font-medium mb-6 inline-flex items-center gap-1.5 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Community
-        </Link>
+  const isOwner = user && recipe.userId && ((recipe.userId as any)._id?.toString() === user.id?.toString());
+  const averageRating = ratings.length > 0
+    ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+    : 0;
 
-        {/* Recipe Header */}
-        <div className="card-theme rounded-xl p-6 mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="font-display text-3xl font-bold text-primary">
-                {recipe.recipeName}
-              </h1>
-              <p className="text-secondary mt-1">
-                by {recipe.userId?.username || 'Unknown Brewer'}
-              </p>
+  const tabs: { key: TabKey; label: string; icon: JSX.Element }[] = [
+    {
+      key: 'ingredients',
+      label: 'Ingredients',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+    },
+    {
+      key: 'brewday',
+      label: 'Brew Day',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'style',
+      label: 'Style',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      key: 'notes',
+      label: 'Notes',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const renderStyleSection = (label: string, content?: string) => {
+    if (!content) return null;
+    return (
+      <div className="mb-4">
+        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--accent-primary)' }}>{label}</h4>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>{content}</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen pt-20 pb-10" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Back Link */}
+          <Link
+            to="/community"
+            className="inline-flex items-center mb-6 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Community
+          </Link>
+
+          {/* Hero Section */}
+          <div className="card-theme rounded-2xl overflow-hidden mb-6">
+            <div className="p-8 border-b" style={{ background: 'linear-gradient(135deg, var(--tag-bg), transparent)', borderColor: 'var(--border-default)' }}>
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                <div className="flex-1">
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2 font-display" style={{ color: 'var(--text-primary)' }}>
+                    {recipe.recipeName}
+                  </h1>
+                  {recipe.style && (
+                    <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                      {recipe.styleCode && <span className="mr-2" style={{ color: 'var(--accent-primary)' }}>{recipe.styleCode}</span>}
+                      {recipe.style}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {recipe.method && (
+                      <span className="text-xs font-medium px-3 py-1 rounded-full tag-theme">
+                        {methodLabels[recipe.method] || recipe.method}
+                      </span>
+                    )}
+                    {recipe.brewer && (
+                      <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                        Brewed by {recipe.brewer}
+                      </span>
+                    )}
+                    {recipe.brewDate && (
+                      <span className="text-xs px-3 py-1 rounded-full" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                        {new Date(recipe.brewDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3">
+                  {/* Import Button - hidden for owner */}
+                  {!isOwner && (
+                    <button
+                      onClick={() => setShowCloneModal(true)}
+                      className="font-semibold py-2 px-4 rounded-lg transition duration-200"
+                      style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}
+                    >
+                      📥 Import to My Recipes
+                    </button>
+                  )}
+                  {isOwner && (
+                    <Link
+                      to={`/recipes/${recipe._id}`}
+                      className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      View in My Recipes
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <StarRating
-                rating={ratings.averageRating}
-                onRate={user ? handleRate : undefined}
-                interactive={!!user}
-                size="lg"
-              />
-              <div className="text-right">
-                <p className="text-lg font-bold text-primary">
-                  {ratings.averageRating > 0 ? ratings.averageRating.toFixed(1) : '—'}
-                </p>
-                <p className="text-xs text-muted">
-                  {ratings.ratingCount} {ratings.ratingCount === 1 ? 'rating' : 'ratings'}
+
+            {/* Stats Bar */}
+            <div className="grid grid-cols-5 divide-x" style={{ borderColor: 'var(--border-default)' }}>
+              <div className="p-4 text-center">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>OG</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {recipe.estimatedOg?.toFixed(3) || '—'}
                 </p>
               </div>
-              {user && (
-                <button
-                  onClick={openCloneModal}
-                  disabled={cloning}
-                  className="ml-4 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 bg-accent-primary text-white hover:opacity-90 disabled:opacity-50"
-                >
-                  {cloning ? 'Importing...' : 'Import to My Recipes'}
-                </button>
-              )}
+              <div className="p-4 text-center">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>FG</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {recipe.estimatedFg?.toFixed(3) || '—'}
+                </p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>IBU</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {recipe.estimatedIbu?.toFixed(1) || '—'}
+                </p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>SRM</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {recipe.estimatedSrm?.toFixed(1) || '—'}
+                </p>
+              </div>
+              <div className="p-4 text-center">
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>ABV</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--accent-primary)' }}>
+                  {recipe.estimatedAbv ? `${recipe.estimatedAbv.toFixed(1)}%` : '—'}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Recipe Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Info */}
-          <div className="card-theme rounded-xl p-6">
-            <h2 className="font-display text-lg font-semibold text-primary mb-4">Recipe Info</h2>
-            <dl className="space-y-3">
-              {recipe.style && (
-                <div className="flex justify-between items-center py-1.5 border-b border-default/30">
-                  <dt className="text-secondary text-sm">Style</dt>
-                  <dd className="font-medium text-primary">{recipe.style}</dd>
-                </div>
-              )}
-              {recipe.method && (
-                <div className="flex justify-between items-center py-1.5 border-b border-default/30">
-                  <dt className="text-secondary text-sm">Method</dt>
-                  <dd className="font-medium text-primary capitalize">
-                    {recipe.method.replace('_', ' ')}
-                  </dd>
-                </div>
-              )}
-              {recipe.batchSize && (
-                <div className="flex justify-between items-center py-1.5 border-b border-default/30">
-                  <dt className="text-secondary text-sm">Batch Size</dt>
-                  <dd className="font-medium text-primary">
-                    {recipe.batchSize} {recipe.batchSizeUnit || 'L'}
-                  </dd>
-                </div>
-              )}
-              {recipe.boilTimeMinutes && (
-                <div className="flex justify-between items-center py-1.5 border-b border-default/30">
-                  <dt className="text-secondary text-sm">Boil Time</dt>
-                  <dd className="font-medium text-primary">
-                    {recipe.boilTimeMinutes} min
-                  </dd>
-                </div>
-              )}
-            </dl>
+          {/* Secondary Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Batch Size</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                {recipe.batchSize ? `${recipe.batchSize} ${recipe.batchSizeUnit || 'L'}` : '—'}
+              </p>
+            </div>
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Boil Time</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                {recipe.boilTimeMinutes ? `${recipe.boilTimeMinutes} min` : '—'}
+              </p>
+            </div>
+            <div className="card-theme rounded-xl p-4 text-center">
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Efficiency</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                {recipe.efficiency ? `${recipe.efficiency}%` : '—'}
+              </p>
+            </div>
           </div>
 
-          {/* Stats */}
-          <div className="card-theme rounded-xl p-6">
-            <h2 className="font-display text-lg font-semibold text-primary mb-4">Estimated Stats</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'OG', value: recipe.estimatedOg?.toFixed(3) },
-                { label: 'FG', value: recipe.estimatedFg?.toFixed(3) },
-                { label: 'ABV', value: recipe.estimatedAbv ? `${recipe.estimatedAbv.toFixed(1)}%` : undefined },
-                { label: 'IBU', value: recipe.estimatedIbu?.toFixed(1) },
-                { label: 'SRM', value: recipe.estimatedSrm?.toFixed(1) },
-              ].map(({ label, value }) => (
-                <div key={label} className="text-center p-3 bg-primary/50 rounded-lg border border-default/30">
-                  <p className="text-xs text-muted uppercase tracking-wider">{label}</p>
-                  <p className={`text-lg font-bold ${value ? 'text-primary' : 'text-secondary'}`}>{value || '—'}</p>
-                </div>
+          {/* Tabs */}
+          <div className="card-theme rounded-2xl overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="flex border-b" style={{ borderColor: 'var(--border-default)' }}>
+              {tabs.map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className="flex-1 flex items-center justify-center gap-2 py-4 px-6 text-sm font-medium transition-all duration-200"
+                  style={{
+                    color: activeTab === tab.key ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    borderBottom: activeTab === tab.key ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                    backgroundColor: activeTab === tab.key ? 'var(--tag-bg)' : 'transparent',
+                  }}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Notes */}
-        {recipe.notes && (
-          <div className="card-theme rounded-xl p-6 mb-6">
-            <h2 className="font-display text-lg font-semibold text-primary mb-4">Notes</h2>
-            <p className="text-primary/80 whitespace-pre-wrap leading-relaxed">{recipe.notes}</p>
-          </div>
-        )}
+            {/* Tab Content */}
+            <div className="p-6">
+              {/* INGREDIENTS TAB */}
+              {activeTab === 'ingredients' && (
+                <div>
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Ingredients</h2>
+                  {ingredients.length > 0 ? (
+                    <IngredientList ingredients={ingredients} />
+                  ) : (
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No ingredients available.</p>
+                  )}
+                </div>
+              )}
 
-        {/* Comments */}
-        <div className="card-theme rounded-xl p-6">
-          <h2 className="font-display text-lg font-semibold text-primary mb-4">
-            Comments ({comments.length})
-          </h2>
-          <CommentSection
-            recipeId={id!}
-            comments={comments}
-            onAdd={handleAddComment}
-            onDelete={handleDeleteComment}
-          />
-        </div>
+              {/* BREW DAY TAB */}
+              {activeTab === 'brewday' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Brew Day</h2>
 
-        {/* Clone Modal */}
-        {showCloneModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-            <div className="card-theme rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
-              <h3 className="text-xl font-bold mb-2 font-display text-primary">Import Recipe</h3>
-              <p className="text-secondary text-sm mb-4">
-                This will copy the recipe to your collection. You can rename it and make it your own.
-              </p>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-secondary mb-1">Recipe Name</label>
-                <input
-                  type="text"
-                  value={cloneName}
-                  onChange={(e) => setCloneName(e.target.value)}
-                  className="input-theme w-full rounded-lg px-4 py-2"
-                  maxLength={100}
-                  autoFocus
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setShowCloneModal(false)}
-                  disabled={cloning}
-                  className="px-4 py-2 rounded-lg font-medium text-secondary hover:text-primary transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleClone}
-                  disabled={cloning || !cloneName.trim()}
-                  className="px-4 py-2 rounded-lg font-medium bg-accent-primary text-white hover:opacity-90 disabled:opacity-50 transition-all"
-                >
-                  {cloning ? 'Importing...' : 'Import Recipe'}
-                </button>
-              </div>
+                  {/* Mash Profile */}
+                  {recipe.mashProfile && recipe.mashProfile.steps && recipe.mashProfile.steps.length > 0 && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>
+                        {recipe.mashProfile.name || 'Mash Profile'}
+                      </h3>
+                      {recipe.mashProfile.grainTemp && (
+                        <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>Grain Temp: {recipe.mashProfile.grainTemp}°C</p>
+                      )}
+                      <div className="space-y-2">
+                        {recipe.mashProfile.steps.map((step, i) => (
+                          <div key={i} className="flex items-center gap-3 text-sm">
+                            <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}>
+                              {i + 1}
+                            </span>
+                            <div className="flex-1">
+                              <span style={{ color: 'var(--text-primary)' }}>{step.name}</span>
+                              <span className="ml-2 text-xs capitalize" style={{ color: 'var(--text-muted)' }}>({step.type})</span>
+                            </div>
+                            <div className="text-right text-xs" style={{ color: 'var(--text-secondary)' }}>
+                              {step.stepTemp && <span>{step.stepTemp}°C</span>}
+                              {step.stepTime && <span className="ml-2">({step.stepTime} min)</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Equipment */}
+                  {recipe.equipment && recipe.equipment.name && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Equipment</h3>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-primary)' }}>{recipe.equipment.name}</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.equipment.tunVolume && <span>Mash Tun: {recipe.equipment.tunVolume} L</span>}
+                        {recipe.equipment.boilKettleVolume && <span>Boil Kettle: {recipe.equipment.boilKettleVolume} L</span>}
+                        {recipe.equipment.evapRate && <span>Evap Rate: {recipe.equipment.evapRate} L/hr</span>}
+                        {recipe.equipment.lauterDeadSpace && <span>Dead Space: {recipe.equipment.lauterDeadSpace} L</span>}
+                        {recipe.equipment.topUpWater && <span>Top Up Water: {recipe.equipment.topUpWater} L</span>}
+                        {recipe.equipment.trubChillerLoss && <span>Trub/Chiller Loss: {recipe.equipment.trubChillerLoss} L</span>}
+                        {recipe.equipment.whirlpoolTime && <span>Whirlpool: {recipe.equipment.whirlpoolTime} min</span>}
+                        {recipe.equipment.whirlpoolTemp && <span>Whirlpool Temp: {recipe.equipment.whirlpoolTemp}°C</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fermentation */}
+                  {(recipe.primaryAgeDays || recipe.primaryTemp || recipe.secondaryAgeDays || recipe.secondaryTemp || recipe.carbonation) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Fermentation</h3>
+                      <div className="grid grid-cols-2 gap-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.primaryAgeDays && <span>Primary: {recipe.primaryAgeDays} days</span>}
+                        {recipe.primaryTemp && <span>Primary Temp: {recipe.primaryTemp}°C</span>}
+                        {recipe.secondaryAgeDays && <span>Secondary: {recipe.secondaryAgeDays} days</span>}
+                        {recipe.secondaryTemp && <span>Secondary Temp: {recipe.secondaryTemp}°C</span>}
+                        {recipe.tertiaryAgeDays && <span>Tertiary: {recipe.tertiaryAgeDays} days</span>}
+                        {recipe.tertiaryTemp && <span>Tertiary Temp: {recipe.tertiaryTemp}°C</span>}
+                        {recipe.carbonation && <span>Carbonation: {recipe.carbonation} volumes</span>}
+                        {recipe.carbonationTemp && <span>Carbonation Temp: {recipe.carbonationTemp}°C</span>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  {recipe.instructions && recipe.instructions.length > 0 && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Instructions ({recipe.instructions.length} steps)</h3>
+                      <ol className="space-y-2 list-decimal list-inside text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.instructions.map((inst, i) => (
+                          <li key={i}>
+                            <span style={{ color: 'var(--text-primary)' }}>{inst.name || `Step ${i + 1}`}</span>
+                            {inst.time && <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>({inst.time} min)</span>}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* Misc Ingredients */}
+                  {recipe.miscIngredients && recipe.miscIngredients.length > 0 && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-3" style={{ color: 'var(--accent-primary)' }}>Other Ingredients</h3>
+                      <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.miscIngredients.map((m, i) => (
+                          <li key={i}>
+                            <span style={{ color: 'var(--text-primary)' }}>{m.name}</span>
+                            {m.amount && <span> — {m.amount}{m.amountIsWeight ? 'g' : 'mL'}</span>}
+                            {m.use && <span className="text-xs ml-1" style={{ color: 'var(--text-muted)' }}>({m.use})</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {!recipe.mashProfile && !recipe.equipment && !recipe.instructions && !recipe.miscIngredients && !(recipe.primaryAgeDays || recipe.primaryTemp) && (
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No brew day data available.</p>
+                  )}
+                </div>
+              )}
+
+              {/* STYLE TAB */}
+              {activeTab === 'style' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Style Information</h2>
+
+                  {recipe.styleProfile ? (
+                    <div className="space-y-4">
+                      {/* Style Header */}
+                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+                          {recipe.styleProfile.name || recipe.style}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                          {recipe.styleProfile.category && <span>Category: {recipe.styleProfile.category}</span>}
+                          {recipe.styleProfile.styleLetter && <span>• {recipe.styleProfile.styleLetter}</span>}
+                          {recipe.styleProfile.styleGuide && <span>• {recipe.styleProfile.styleGuide}</span>}
+                        </div>
+                      </div>
+
+                      {/* Style Ranges */}
+                      <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                        <h4 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>BJCP Ranges</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                          {recipe.styleProfile.ogMin && recipe.styleProfile.ogMax && (
+                            <span>OG: {recipe.styleProfile.ogMin.toFixed(3)} – {recipe.styleProfile.ogMax.toFixed(3)}</span>
+                          )}
+                          {recipe.styleProfile.fgMin && recipe.styleProfile.fgMax && (
+                            <span>FG: {recipe.styleProfile.fgMin.toFixed(3)} – {recipe.styleProfile.fgMax.toFixed(3)}</span>
+                          )}
+                          {recipe.styleProfile.ibuMin && recipe.styleProfile.ibuMax && (
+                            <span>IBU: {recipe.styleProfile.ibuMin} – {recipe.styleProfile.ibuMax}</span>
+                          )}
+                          {recipe.styleProfile.colorMin && recipe.styleProfile.colorMax && (
+                            <span>SRM: {recipe.styleProfile.colorMin} – {recipe.styleProfile.colorMax}</span>
+                          )}
+                          {recipe.styleProfile.abvMin && recipe.styleProfile.abvMax && (
+                            <span>ABV: {recipe.styleProfile.abvMin}% – {recipe.styleProfile.abvMax}%</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Style Description Sections */}
+                      {renderStyleSection('Aroma', recipe.styleProfile.aroma)}
+                      {renderStyleSection('Appearance', recipe.styleProfile.appearance)}
+                      {renderStyleSection('Flavor', recipe.styleProfile.flavor)}
+                      {renderStyleSection('Mouthfeel', recipe.styleProfile.mouthfeel)}
+                      {renderStyleSection('Overall Impression', recipe.styleProfile.overallImpression)}
+                      {renderStyleSection('Profile', recipe.styleProfile.profile)}
+                      {renderStyleSection('Ingredients', recipe.styleProfile.ingredients)}
+                      {renderStyleSection('Commercial Examples', recipe.styleProfile.examples)}
+                      {renderStyleSection('Notes', recipe.styleProfile.notes)}
+                    </div>
+                  ) : (
+                    <p className="text-center py-8" style={{ color: 'var(--text-secondary)' }}>No style profile data available.</p>
+                  )}
+                </div>
+              )}
+
+              {/* NOTES TAB */}
+              {activeTab === 'notes' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Notes</h2>
+
+                  {/* Brewer Info */}
+                  {(recipe.brewer || recipe.asstBrewer || recipe.brewDate) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Brewer</h3>
+                      <div className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.brewer && <p>Head Brewer: {recipe.brewer}</p>}
+                        {recipe.asstBrewer && <p>Assistant Brewer: {recipe.asstBrewer}</p>}
+                        {recipe.brewDate && <p>Brew Date: {new Date(recipe.brewDate).toLocaleDateString()}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recipe Notes */}
+                  <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Recipe Notes</h3>
+                    {recipe.notes ? (
+                      <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--text-secondary)' }}>{recipe.notes}</p>
+                    ) : (
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No recipe notes.</p>
+                    )}
+                  </div>
+
+                  {/* Taste Notes */}
+                  <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                    <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Taste Notes</h3>
+                    {recipe.tasteNotes ? (
+                      <p className="whitespace-pre-wrap leading-relaxed text-sm" style={{ color: 'var(--text-secondary)' }}>{recipe.tasteNotes}</p>
+                    ) : (
+                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No taste notes.</p>
+                    )}
+                    {recipe.tasteRating && (
+                      <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Taste Rating: {recipe.tasteRating}/50</p>
+                    )}
+                  </div>
+
+                  {/* Carbonation */}
+                  {(recipe.carbonation || recipe.primingSugarName) && (
+                    <div className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                      <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--accent-primary)' }}>Carbonation</h3>
+                      <div className="text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                        {recipe.carbonation && <p>Target: {recipe.carbonation} volumes CO₂</p>}
+                        {recipe.primingSugarName && <p>Priming Sugar: {recipe.primingSugarName}</p>}
+                        {recipe.forcedCarbonation && <p>Method: Force Carbonated</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        )}
+
+          {/* Rating Section */}
+          <div className="card-theme rounded-2xl p-6 mt-6">
+            <h3 className="text-lg font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>
+              Community Ratings
+            </h3>
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center">
+                {[1, 2, 3, 4, 5].map(star => (
+                  <button
+                    key={star}
+                    onClick={() => handleRate(star)}
+                    disabled={submittingRating}
+                    className="text-2xl transition-colors disabled:opacity-50"
+                    style={{ color: star <= userRating ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                {averageRating > 0 ? `${averageRating.toFixed(1)} average (${ratings.length} ratings)` : 'No ratings yet'}
+              </span>
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="card-theme rounded-2xl p-6 mt-6">
+            <h3 className="text-lg font-semibold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>
+              Comments ({comments.length})
+            </h3>
+
+            {/* Add Comment */}
+            <div className="mb-6">
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Add a comment..."
+                className="w-full p-3 rounded-lg border resize-none focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-default)',
+                  color: 'var(--text-primary)',
+                }}
+                rows={3}
+              />
+              <button
+                onClick={handleSubmitComment}
+                disabled={!newComment.trim() || submittingComment}
+                className="mt-2 font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}
+              >
+                {submittingComment ? 'Posting...' : 'Post Comment'}
+              </button>
+            </div>
+
+            {/* Comments List */}
+            <div className="space-y-4">
+              {comments.map(comment => (
+                <div key={comment._id} className="rounded-lg p-4" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {comment.userId?.username || 'Unknown'}
+                    </span>
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {new Date(comment.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{comment.text}</p>
+                  {user && comment.userId && comment.userId._id === user.id && (
+                    <button
+                      onClick={() => handleDeleteComment(comment._id)}
+                      className="text-xs mt-2 text-red-500 hover:text-red-600"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              ))}
+              {comments.length === 0 && (
+                <p className="text-center py-4" style={{ color: 'var(--text-muted)' }}>No comments yet. Be the first!</p>
+              )}
+            </div>
+          </div>
+
+          {/* Timestamps */}
+          <div className="mt-6 text-sm flex justify-between" style={{ color: 'var(--text-muted)' }}>
+            <span>Created: {recipe.createdAt ? new Date(recipe.createdAt).toLocaleDateString() : 'Unknown'}</span>
+            {recipe.updatedAt && recipe.updatedAt !== recipe.createdAt && (
+              <span>Updated: {new Date(recipe.updatedAt).toLocaleDateString()}</span>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Clone Modal */}
+      {showCloneModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'var(--overlay-bg)' }}>
+          <div className="card-theme rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
+            <h3 className="text-xl font-bold mb-4 font-display" style={{ color: 'var(--text-primary)' }}>Import Recipe</h3>
+            <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+              Enter a name for your copy of this recipe:
+            </p>
+            <input
+              type="text"
+              value={cloneName}
+              onChange={(e) => setCloneName(e.target.value)}
+              className="w-full p-3 rounded-lg border mb-4"
+              style={{
+                backgroundColor: 'var(--bg-secondary)',
+                borderColor: 'var(--border-default)',
+                color: 'var(--text-primary)',
+              }}
+              placeholder="Recipe name"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCloneModal(false)}
+                disabled={cloning}
+                className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClone}
+                disabled={cloning || !cloneName.trim()}
+                className="font-semibold py-2 px-4 rounded-lg transition duration-200 disabled:opacity-50"
+                style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}
+              >
+                {cloning ? 'Importing...' : 'Import Recipe'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

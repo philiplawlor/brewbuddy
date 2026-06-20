@@ -17,15 +17,15 @@ export function UpcomingSteps({ currentStep }: UpcomingStepsProps) {
 
   return (
     <div className="mt-6">
-      <div className="text-xs text-gray-400 mb-3">UPCOMING</div>
+      <div className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>UPCOMING</div>
       {upcoming.map((step, index) => (
         <div
           key={step.id}
           className={`flex items-center gap-3 py-2 ${index === 0 ? 'opacity-100' : 'opacity-50'}`}
         >
-          <div className="w-2 h-2 rounded-full bg-gray-500" />
-          <div className="flex-1 text-sm">{step.label}</div>
-          <div className="text-sm text-gray-400">{step.duration}</div>
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: 'var(--text-muted)' }} />
+          <div className="flex-1 text-sm" style={{ color: 'var(--text-primary)' }}>{step.label}</div>
+          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{step.duration}</div>
         </div>
       ))}
     </div>

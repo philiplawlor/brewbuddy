@@ -12,13 +12,17 @@ export function HopCallout({ nextHop, timeUntilHop }: HopCalloutProps) {
   const isDue = timeUntilHop === 0;
 
   return (
-    <div className={`border rounded-xl p-4 ${isDue ? 'bg-red-500/20 border-red-500' : 'bg-white/5 border-white/10'}`}>
+    <div className={`border rounded-xl p-4 ${isDue ? 'bg-red-500/20 border-red-500' : ''}`}
+      style={!isDue ? { backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-default)' } : undefined}
+    >
       <div className="flex justify-between items-center">
         <div>
-          <div className="text-xs text-gray-400">NEXT HOP ADDITION</div>
-          <div className="text-lg font-bold mt-1">🌿 {nextHop.name} — {nextHop.amount} {nextHop.unit}</div>
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>NEXT HOP ADDITION</div>
+          <div className="text-lg font-bold mt-1" style={{ color: 'var(--text-primary)' }}>🌿 {nextHop.name} — {nextHop.amount} {nextHop.unit}</div>
         </div>
-        <div className={`text-2xl font-bold ${isDue ? 'text-red-500' : 'text-amber-500'}`}>
+        <div className={`text-2xl font-bold ${isDue ? 'text-red-500' : ''}`}
+          style={!isDue ? { color: 'var(--accent-primary)' } : undefined}
+        >
           {isDue ? 'ADD NOW!' : formattedTime}
         </div>
       </div>

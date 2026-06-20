@@ -10,6 +10,7 @@ import { RecipeList } from './pages/RecipeList';
 import { RecipeDetail } from './pages/RecipeDetail';
 import { RecipeForm } from './pages/RecipeForm';
 import { BrewSessionList } from './pages/BrewSessionList';
+import { BrewSessionForm } from './pages/BrewSessionForm';
 import { BrewSessionDetail } from './pages/BrewSessionDetail';
 import { BrewTimer } from './pages/BrewTimer';
 import { Landing } from './pages/Landing';
@@ -51,6 +52,7 @@ function AppRoutes() {
         <Route path="/recipes/:id" element={<RecipeDetail />} />
         <Route path="/recipes/:id/edit" element={<RecipeForm />} />
         <Route path="/brew-sessions" element={<BrewSessionList />} />
+        <Route path="/brew-sessions/new" element={<BrewSessionForm />} />
         <Route path="/brew-sessions/:id" element={<BrewSessionDetail />} />
         <Route path="/brew-sessions/:id/timer" element={<BrewTimer />} />
         <Route path="/community" element={<Community />} />

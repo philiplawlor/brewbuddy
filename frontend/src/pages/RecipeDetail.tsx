@@ -254,6 +254,13 @@ export function RecipeDetail() {
                 {isOwner && (
                   <div className="flex space-x-3">
                     <Link
+                      to={`/brew-sessions/new?recipeId=${recipe._id}`}
+                      className="font-semibold py-2 px-4 rounded-lg transition duration-200"
+                      style={{ backgroundColor: 'var(--accent-primary)', color: 'var(--brewery-black)' }}
+                    >
+                      🍺 Start Brewing
+                    </Link>
+                    <Link
                       to={`/recipes/${recipe._id}/edit`}
                       className="card-theme font-semibold py-2 px-4 rounded-lg transition duration-200"
                       style={{ color: 'var(--text-primary)' }}

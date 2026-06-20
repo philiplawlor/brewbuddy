@@ -23,7 +23,7 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={name} className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -36,9 +36,12 @@ export function FormField({
         placeholder={placeholder}
         required={required}
         minLength={minLength}
-        className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200 ${
-          error ? 'border-red-500' : 'border-gray-300'
-        }`}
+        className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+        style={{
+          backgroundColor: 'var(--bg-secondary)',
+          borderColor: error ? '#ef4444' : 'var(--border-default)',
+          color: 'var(--text-primary)',
+        }}
       />
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
     </div>
